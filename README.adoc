@@ -1,0 +1,21 @@
+# Text-Table-Kinoko
+Advanced table generate module for perl6
+
+User Input (@, @) -> [ CELL( top right top-right-corner context ) ] -> APPLY STYLE
+
+style: 
+
+CORNER STYLE
+
+TABLE STYLE (CORNER STYLE + LINE STYLE)
+ = 
+: CELL STYLE = TOP RIGHT TOP-MIDDLE
+: TABLE STYLE = LEFT LOWER TOP-LEFT-CORNER TOP-RIGHT-CORNER
+
+KSTR -> [ CORNER LINE TEXT ]
+
+class Corner {
+    has KStr $.str;
+    has Int  $.n;
+    has $!cache;   
+}
