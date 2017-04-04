@@ -6,7 +6,7 @@ class Char {
     has Str $.str;
     has Int $.width;
 
-    method new(:$str, :$width) {
+    method new(:$str is copy, :$width) {
         self.bless(:$str, width => ?$width ?? $width !! wcswidth($str));
     }
 
@@ -22,7 +22,15 @@ class Char {
         return Char.new(str => $!str x $n, width => $!width x $n);
     }
 
+    method extend(Int $width) {
+        return Char.new(str => $!str x ( $width div $!width ), width => $width );
+    }
+
     method concat(Char $char) {
         return Char.new(str => $!str ~ $char.str, width => $!width + $char.width);
+    }
+
+    method clone() {
+        self.new(:$!str, :$!width);
     }
 }

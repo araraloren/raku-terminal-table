@@ -1,31 +1,54 @@
 
 use v6;
+use Text::Table::Kinoko::DeepClone;
 use Text::Table::Kinoko::Char;
-use Text::Table::Kinoko::Table;
-use Text::Table::Kinoko::Styler;
+use Text::Table::Kinoko::Generator;
+use Text::Table::Kinoko::Style;
 
-my $table = Table.new(
-    styler => Styler.new(
-        corner-styler => Styler::Corner.default(),
-        line-styler => Styler::Line.default(),
+
+my $g = Generator.new(
+    style => Style.new(
+        corner-style => Style::Corner.single(:bold),
+        line-style => Style::Line.single(:bold),
+        content-style => Style::Content.space(),
     )
 );
 
-dd $table;
+$g.add-cell(1);
+$g.add-cell(1);
+$g.end-line;
+$g.add-cell(1);
+$g.add-cell(1);
+$g.add-cell(1);
+$g.end-line;
+$g.add-cell(1);
+$g.add-cell('一只羊');
+$g.end-line;
 
-$table.add-cell(Char.new(str => "1"));
-$table.add-cell(Char.new(str => "2"));
-$table.end-line;
-$table.add-cell(Char.new(str => "3"));
-$table.add-cell(Char.new(str => "4"));
-$table.add-cell(Char.new(str => "5"));
-$table.end-line;
-$table.add-cell(Char.new(str => "6"));
-$table.add-cell(Char.new(str => "7"));
-$table.add-cell(Char.new(str => "8"));
-$table.add-cell(Char.new(str => "9"));
-$table.add-cell(Char.new(str => "0"));
-$table.end-line;
+$g.print;
 
+my $g1 = Generator.new(
+    style => Style.new(
+        corner-style => Style::Corner.single(),
+        line-style => Style::Line.single(),
+        content-style => Style::Content.space(),
+    )
+);
+
+$g1.add-cell(23);
+$g1.add-cell(2);
+$g1.end-line;
+$g1.add-cell(2);
+$g1.add-cell(2);
+$g1.add-cell(2);
+$g1.end-line;
+$g1.add-cell(2);
+$g1.add-cell(2);
+$g1.end-line;
+
+$g1.print;
+
+$g.join($g1, :preserve-style);
+my $table = $g.gen-table();
 
 $table.print;

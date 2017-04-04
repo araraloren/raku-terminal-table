@@ -6,41 +6,46 @@ use Text::Table::Kinoko::Exception;
 class Content {
     has Char $.char;
 
-    multi method new(:$str, :$width) {
+    multi method new(Char :$str) {
+        self.bless( char => $str );
+    }
+
+    multi method new(Str :$str, :$width) {
         self.bless(
             char => Char.new(:$str, :$width)
         );
     }
 
-    multi method align(Int $n, :$middle) {
-        unless $n %% 2 {
-            X::Kinoko::Error.new(msg => 'indent width must be even number').throw();
+    method align($width, $style) {
+        my $padding-width = $width - $!char.width + $style.indent;
+
+        if $style.align-middle {
+            unless $style.indent %% 2 {
+                X::Kinoko::Error.new(msg => 'indent width must be even number').throw();
+            }
+            my $padding = $style.padding-char x ($padding-width div 2);
+            return self.new( str => Char.new(
+                str => $padding ~ $!char.Str() ~ $padding ~ ($padding-width %% 2 ?? "" !! $style.padding-char),
+                width => $!char.width + $padding-width
+            ));
         }
-        my $space = ' ' x ($n div 2);
-        return Content.new(
-            char => Char.new(
-                str => $space ~ $!char.Str() ~ $space,
-                width => $!char.width + $n
-            );
-        )
+        if $style.align-left {
+            return self.new( str => Char.new(
+                str => $!char.Str() ~ ($style.padding-char x $padding-width),
+                width => $!char.width + $padding-width
+            ));
+        }
+        if $style.align-right {
+            return self.new( str => Char.new(
+                str => ($style.padding-char x $padding-width) ~ $!char.Str(),
+                width => $!char.width + $padding-width
+            ));
+        }
+        X::Kinoko::Error.new(msg => 'Can not recognize align type!').throw();
     }
 
-    multi method align(Int $n, :$left) {
-        return Content.new(
-            char => Char.new(
-                str => $!char.Str() ~ (' ' x $n),
-                width => $!char.width + $n
-            );
-        )
-    }
-
-    multi method align(Int $n, :$right) {
-        return Content.new(
-            char => Char.new(
-                str => (' ' x $n) ~ $!char.Str(),
-                width => $!char.width + $n
-            );
-        )
+    method width() {
+        $!char.width;
     }
 
     method Str() {
@@ -49,5 +54,9 @@ class Content {
 
     method Char() {
         return $!char;
+    }
+
+    method clone() {
+        self.new(str => $!char.clone());
     }
 }
