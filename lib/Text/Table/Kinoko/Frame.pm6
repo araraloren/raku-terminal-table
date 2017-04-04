@@ -7,9 +7,9 @@ role Frame {
     has Int  $.n;
     has Char $!cache;
 
-    method new(:$str, :$width, :$n) {
+    multi method new(Char :$char, :$n = 1) {
         self.bless(
-            char => Char.new(:$str, :$width),
+            char => $char,
             :$n
         );
     }
@@ -22,10 +22,28 @@ role Frame {
         return $!n;
     }
 
+    method extend($width) {
+        return self.bless(
+            char => $!char,
+            n => $width div $!char.width
+        );
+    }
+
+    method width() {
+        $!n * $!char.width;
+    }
+
     method Char() { ... }
 }
 
 class Line does Frame {
+    multi method new(Str :$str, :$width, :$n = 1) {
+        self.bless(
+            char => Char.new(:$str, :$width),
+            :$n
+        );
+    }
+
     method Char() {
         return $!cache // do {
             $!cache = $!char.repeat($!n);
@@ -35,8 +53,11 @@ class Line does Frame {
 }
 
 class Corner does Frame {
-    method new(:$char) {
-        self.bless(:$char, n => 1);
+    multi method new(Str :$str, :$width, :$n = 1) {
+        self.bless(
+            char => Char.new(:$str, :$width),
+            :$n
+        );
     }
 
     method Char() {
@@ -44,3 +65,52 @@ class Corner does Frame {
     }
 }
 
+multi sub makeLine(Str $str) is export {
+    return Line.new(:$str, n => 1);
+}
+
+multi sub makeLine(Str $str, $width) is export {
+    return Line.new(:$str, :$width, n => 1);
+}
+
+sub makeLineArray(@sarray) is export {
+    my @ret;
+	@ret.push(makeLine($_)) for @sarray;
+	return @ret;
+}
+
+sub makeLineArray2(@sarray) is export {
+    my @ret;
+
+    for @sarray -> $inner {
+        my @t;
+        @t.push(makeLine($_)) for @$inner;
+        @ret.push(@t);
+    }
+    return @ret;
+}
+
+multi sub makeCorner(Str $str) is export {
+    return Corner.new(:$str);
+}
+
+multi sub makeCorner(Str $str, $width) is export {
+    return Corner.new(:$str, :$width);
+}
+
+sub makeCornerArray(@sarray) is export {
+    my @ret;
+	@ret.push(makeCorner($_)) for @sarray;
+	return @ret;
+}
+
+sub makeCornerArray2(@sarray) is export {
+    my @ret;
+
+    for @sarray -> $inner {
+        my @t;
+        @t.push(makeCorner($_)) for @$inner;
+        @ret.push(@t);
+    }
+    return @ret;
+}

@@ -1,34 +1,12 @@
 
 use v6;
 use Text::Table::Kinoko::Char;
+use Text::Table::Kinoko::Frame;
 
-multi sub makeChar(Str $str) is export {
-	return Char.new(
-		str => $str
-	);
-}
-
-multi sub makeChar(Str $str, Int $width) is export {
-	return Char.new(
-		str => $str,
-		width => $width
-	);
-}
-
-sub makeCharArray(@style) is export {
-	my @ret;
-
-	for @style -> $inner {
-		my @t;
-		@t.push(Char.new(
-					   str => $_
-				   )) for @$inner;
-		@ret.push(@t);
-	}
-	return @ret;
-}
-
-enum Style::Type 	<< None Space Single Double >>;
+constant NONE 		= 'none';
+constant SPACE 		= ' ';
+constant SINGLE 	= '-';
+constant DOUBLE 	= '--';
 
 class Style::Corner {
 	has @.style handles < AT-POS >;
@@ -36,18 +14,18 @@ class Style::Corner {
 
 	method none() {
 		self.new(
-			style => makeCharArray([
+			#`(style => makeCornerArray2([
 				['',  '', ''],
 				['',  '', ''],
 				['',  '', ''],
-			]),
-			mode => Style::Type::None
+			]),)
+			mode => NONE
 		);
 	}
 
 	method space() {
 		self.new(
-			style => makeCharArray([
+			style => makeCornerArray2([
                 [' ',  ' ', ' '],
                 [' ',  ' ', ' '],
                 [' ',  ' ', ' '],
@@ -59,72 +37,72 @@ class Style::Corner {
 	method single(:$bold, :$bold1, :$bold2) {
 		if ?$bold {
 			return self.new(
-				style => makeCharArray([
+				style => makeCornerArray2([
 	                <┏ ┳ ┓>,
 	                <┣ ╋ ┫>,
 	                <┗ ┻ ┛>,
 	            ]),
-				mode => Style::Type::Single
+				mode => SINGLE
 			);
 		}
 		if ?$bold1 {
 			return self.new(
-				style => makeCharArray([
+				style => makeCornerArray2([
 	                <┍ ┰ ┑>,
 	                <┝ ┿ ┥>,
 	                <┕ ┸ ┙>,
 	            ]),
-				mode => Style::Type::Single
+				mode => SINGLE
 			);
 		}
 		if ?$bold2 {
 			return self.new(
-				style => makeCharArray([
+				style => makeCornerArray2([
 	                <┎ ┯ ┒>,
 	                <┠ ╂ ┨>,
 	                <┖ ┷ ┚>,
 	            ]),
-				mode => Style::Type::Single
+				mode => SINGLE
 			);
 		}
 		return self.new(
-			style => makeCharArray([
+			style => makeCornerArray2([
 				<┌ ┬ ┐>,
 				<├ ┼ ┤>,
 				<└ ┴ ┘>,
 			]),
-			mode => Style::Type::Single
+			mode => SINGLE
 		);
 	}
 
 	method double(:$single, :$single1) {
 		if ?$single {
 			return self.new(
-				style => makeCharArray([
+				style => makeCornerArray2([
 	                <╒ ╤ ╕>,
 	                <╞ ╪ ╡>,
 	                <╘ ╧ ╛>,
 	            ]),
-				mode => Style::Type::Double
+				mode => DOUBLE
 			);
 		}
 		if ?$single1 {
 			return self.new(
-				style => makeCharArray([
+				style => makeCornerArray2([
 	                <╓ ╥ ╖>,
 	                <╟ ╫ ╢>,
 	                <╙ ╨ ╜>,
 	            ]),
-				mode => Style::Type::Double
+				mode => DOUBLE
 			);
 		}
 		return self.new(
-			style => makeCharArray([
+			style => makeCornerArray2([
                 <╔ ╦ ╗>,
                 <╠ ╬ ╣>,
                 <╚ ╩ ╝>,
             ]),
-			mode => Style::Type::Double
+			mode => DOUBLE
 		);
 	}
 
@@ -171,104 +149,104 @@ class Style::Corner {
 	}
 
 	method is-none() {
-		$!mode == Type::None;
+		$!mode eq NONE;
 	}
 }
 
 class Style::Line {
-	has Char $.top;
-	has Char $.h-middle;
-	has Char $.bottom;
-	has Char $.left;
-	has Char $.v-middle;
-	has Char $.right;
+	has Line $.top;
+	has Line $.h-middle;
+	has Line $.bottom;
+	has Line $.left;
+	has Line $.v-middle;
+	has Line $.right;
 	has      $.mode;
 
 	method none() {
 		self.new(
-			top 		=> makeChar('', 0),
-			h-middle 	=> makeChar('', 0),
-			bottom 		=> makeChar('', 0),
-			left 		=> makeChar('', 0),
-			v-middle 	=> makeChar('', 0),
-			right 		=> makeChar('', 0),
-			mode => Style::Type::None
+			top 		=> makeLine('', 0),
+			h-middle 	=> makeLine('', 0),
+			bottom 		=> makeLine('', 0),
+			left 		=> makeLine('', 0),
+			v-middle 	=> makeLine('', 0),
+			right 		=> makeLine('', 0),
+			mode 		=> NONE
 		);
 	}
 
 	method space() {
 		self.new(
-			top 		=> makeChar(' ', 1),
-			h-middle 	=> makeChar(' ', 1),
-			bottom 		=> makeChar(' ', 1),
-			left 		=> makeChar(' ', 1),
-			v-middle 	=> makeChar(' ', 1),
-			right 		=> makeChar(' ', 1),
-			mode 		=> Style::Type::Space
+			top 		=> makeLine(' ', 1),
+			h-middle 	=> makeLine(' ', 1),
+			bottom 		=> makeLine(' ', 1),
+			left 		=> makeLine(' ', 1),
+			v-middle 	=> makeLine(' ', 1),
+			right 		=> makeLine(' ', 1),
+			mode 		=> SPACE
 		)
 	}
 
 	multi method single(:$bold) {
 		if ?$bold {
 			return self.new(
-				top 		=> makeChar('━', 1),
-				h-middle 	=> makeChar('━', 1),
-				bottom 		=> makeChar('━', 1),
-				left 		=> makeChar('┃', 1),
-				v-middle 	=> makeChar('┃', 1),
-				right 		=> makeChar('┃', 1),
-				mode 		=> Style::Type::Single
+				top 		=> makeLine('━', 1),
+				h-middle 	=> makeLine('━', 1),
+				bottom 		=> makeLine('━', 1),
+				left 		=> makeLine('┃', 1),
+				v-middle 	=> makeLine('┃', 1),
+				right 		=> makeLine('┃', 1),
+				mode 		=> SINGLE
 			);
 		}
 		return self.new(
-			top 		=> makeChar('─', 1),
-			h-middle 	=> makeChar('─', 1),
-			bottom 		=> makeChar('─', 1),
-			left 		=> makeChar('│', 1),
-			v-middle 	=> makeChar('│', 1),
-			right 		=> makeChar('│', 1),
-			mode 		=> Style::Type::Single
+			top 		=> makeLine('─', 1),
+			h-middle 	=> makeLine('─', 1),
+			bottom 		=> makeLine('─', 1),
+			left 		=> makeLine('│', 1),
+			v-middle 	=> makeLine('│', 1),
+			right 		=> makeLine('│', 1),
+			mode 		=> SINGLE
 		);
 	}
 
 	method double() {
 		self.new(
-			top 		=> makeChar('═', 1),
-			h-middle 	=> makeChar('═', 1),
-			bottom 		=> makeChar('═', 1),
-			left 		=> makeChar('║', 1),
-			v-middle 	=> makeChar('║', 1),
-			right 		=> makeChar('║', 1),
-			mode 		=> Style::Type::Double
+			top 		=> makeLine('═', 1),
+			h-middle 	=> makeLine('═', 1),
+			bottom 		=> makeLine('═', 1),
+			left 		=> makeLine('║', 1),
+			v-middle 	=> makeLine('║', 1),
+			right 		=> makeLine('║', 1),
+			mode 		=> DOUBLE
 		)
 	}
 
 	method dot() {
 		self.new(
-			top 		=> makeChar('╍', 1),
-			h-middle 	=> makeChar('╍', 1),
-			bottom 		=> makeChar('╍', 1),
-			left 		=> makeChar('╏', 1),
-			v-middle 	=> makeChar('╏', 1),
-			right 		=> makeChar('╏', 1),
+			top 		=> makeLine('╍', 1),
+			h-middle 	=> makeLine('╍', 1),
+			bottom 		=> makeLine('╍', 1),
+			left 		=> makeLine('╏', 1),
+			v-middle 	=> makeLine('╏', 1),
+			right 		=> makeLine('╏', 1),
 			mode 		=> Style::Type::Double2
 		)
 	}
 
 	method dot2() {
 		self.new(
-			top 		=> makeChar('╍', 1),
-			h-middle 	=> makeChar('╍', 1),
-			bottom 		=> makeChar('╍', 1),
-			left 		=> makeChar('╏', 1),
-			v-middle 	=> makeChar('╏', 1),
-			right 		=> makeChar('╏', 1),
+			top 		=> makeLine('╍', 1),
+			h-middle 	=> makeLine('╍', 1),
+			bottom 		=> makeLine('╍', 1),
+			left 		=> makeLine('╏', 1),
+			v-middle 	=> makeLine('╏', 1),
+			right 		=> makeLine('╏', 1),
 			mode 		=> Style::Type::Double2
 		)
 	}
 
 	method is-none() {
-		$!mode == Style::Type::None;
+		$!mode eq NONE;
 	}
 }
 

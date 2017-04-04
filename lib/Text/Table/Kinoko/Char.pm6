@@ -19,7 +19,7 @@ class Char {
     }
 
     method repeat($n) {
-        return Char.new(str => $!str x $n, width => $!width x $n);
+        return Char.new(str => $!str x $n, width => $!width * $n);
     }
 
     method extend(Int $width) {
@@ -33,4 +33,36 @@ class Char {
     method clone() {
         self.new(:$!str, :$!width);
     }
+}
+
+multi sub makeChar(Str $str) is export {
+	return Char.new(
+		str => $str
+	);
+}
+
+multi sub makeChar(Str $str, Int $width) is export {
+	return Char.new(
+		str => $str,
+		width => $width
+	);
+}
+
+sub makeCharArray(@style) is export {
+	my @ret;
+	@ret.push(Char.new( str => $_ )) for @style;
+	return @ret;
+}
+
+sub makeCharArray2(@style) is export {
+	my @ret;
+
+	for @style -> $inner {
+		my @t;
+		@t.push(Char.new(
+					   str => $_
+				   )) for @$inner;
+		@ret.push(@t);
+	}
+	return @ret;
 }
