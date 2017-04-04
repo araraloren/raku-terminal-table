@@ -1,6 +1,6 @@
 
 use v6;
-use Text::Table::Kinoko::Char;
+use Text::Table::Kinoko::KString;
 use Text::Table::Kinoko::Frame;
 
 constant NONE 		= 'none';
@@ -251,7 +251,7 @@ class Style::Line {
 }
 
 class Style::Content {
-	has Char $.padding-char;
+	has KString $.padding-char;
 	has Int  $.indent;
 	has      $.align;
 
@@ -259,7 +259,7 @@ class Style::Content {
 
 	method space (:$indent = 2, :$align = Align::Left) {
 		self.new(
-			padding-char => makeChar(" ", 1),
+			padding-char => makeKString(" ", 1),
 			:$indent,
 			:$align
 		);

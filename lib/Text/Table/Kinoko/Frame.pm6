@@ -1,13 +1,13 @@
 
 use v6;
-use Text::Table::Kinoko::Char;
+use Text::Table::Kinoko::KString;
 
 role Frame {
-    has Char $.char;
+    has KString $.char;
     has Int  $.n;
-    has Char $!cache;
+    has KString $!cache;
 
-    multi method new(Char :$char, :$n = 1) {
+    multi method new(KString :$char, :$n = 1) {
         self.bless(
             char => $char,
             :$n
@@ -15,7 +15,7 @@ role Frame {
     }
 
     method Str() {
-        return self.Char().Str();
+        return self.KString().Str();
     }
 
     method count() {
@@ -33,18 +33,18 @@ role Frame {
         $!n * $!char.width;
     }
 
-    method Char() { ... }
+    method KString() { ... }
 }
 
 class Line does Frame {
     multi method new(Str :$str, :$width, :$n = 1) {
         self.bless(
-            char => Char.new(:$str, :$width),
+            char => KString.new(:$str, :$width),
             :$n
         );
     }
 
-    method Char() {
+    method KString() {
         return $!cache // do {
             $!cache = $!char.repeat($!n);
             $!cache;
@@ -55,12 +55,12 @@ class Line does Frame {
 class Corner does Frame {
     multi method new(Str :$str, :$width, :$n = 1) {
         self.bless(
-            char => Char.new(:$str, :$width),
+            char => KString.new(:$str, :$width),
             :$n
         );
     }
 
-    method Char() {
+    method KString() {
         return $!char;
     }
 }

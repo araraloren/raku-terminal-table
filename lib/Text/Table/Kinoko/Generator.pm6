@@ -1,6 +1,6 @@
 
 use v6;
-use Text::Table::Kinoko::Char;
+use Text::Table::Kinoko::KString;
 use Text::Table::Kinoko::Style;
 use Text::Table::Kinoko::Frame;
 use Text::Table::Kinoko::Array2D;
@@ -23,11 +23,11 @@ class Generator {
         self.bless(style => [ ScopeStyle.new(beg => 0, style => $style), ]);
     }
 
-    multi method add-cell($s where * !~~ Str | Char) {
+    multi method add-cell($s where * !~~ Str | KString) {
         @!data[$!index].push(Content.new(str => $s.Str));
     }
 
-    multi method add-cell($str where * ~~ Str | Char) {
+    multi method add-cell($str where * ~~ Str | KString) {
         @!data[$!index].push(Content.new(str => $str));
     }
 

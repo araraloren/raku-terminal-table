@@ -2,7 +2,7 @@
 use v6;
 use Terminal::WCWidth;
 
-class Char {
+class KString {
     has Str $.str;
     has Int $.width;
 
@@ -19,15 +19,15 @@ class Char {
     }
 
     method repeat($n) {
-        return Char.new(str => $!str x $n, width => $!width * $n);
+        return KString.new(str => $!str x $n, width => $!width * $n);
     }
 
     method extend(Int $width) {
-        return Char.new(str => $!str x ( $width div $!width ), width => $width );
+        return KString.new(str => $!str x ( $width div $!width ), width => $width );
     }
 
-    method concat(Char $char) {
-        return Char.new(str => $!str ~ $char.str, width => $!width + $char.width);
+    method concat(KString $char) {
+        return KString.new(str => $!str ~ $char.str, width => $!width + $char.width);
     }
 
     method clone() {
@@ -35,31 +35,31 @@ class Char {
     }
 }
 
-multi sub makeChar(Str $str) is export {
-	return Char.new(
+multi sub makeKString(Str $str) is export {
+	return KString.new(
 		str => $str
 	);
 }
 
-multi sub makeChar(Str $str, Int $width) is export {
-	return Char.new(
+multi sub makeKString(Str $str, Int $width) is export {
+	return KString.new(
 		str => $str,
 		width => $width
 	);
 }
 
-sub makeCharArray(@style) is export {
+sub makeKStringArray(@style) is export {
 	my @ret;
-	@ret.push(Char.new( str => $_ )) for @style;
+	@ret.push(KString.new( str => $_ )) for @style;
 	return @ret;
 }
 
-sub makeCharArray2(@style) is export {
+sub makeKStringArray2(@style) is export {
 	my @ret;
 
 	for @style -> $inner {
 		my @t;
-		@t.push(Char.new(
+		@t.push(KString.new(
 					   str => $_
 				   )) for @$inner;
 		@ret.push(@t);
