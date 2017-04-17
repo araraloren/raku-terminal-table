@@ -3,12 +3,12 @@ Advanced table generate module for perl6
 
 User Input (@, @) -> [ CELL( top right top-right-corner context ) ] -> APPLY STYLE
 
-style: 
+style:
 
 CORNER STYLE
 
 TABLE STYLE (CORNER STYLE + LINE STYLE)
- = 
+ =
 : CELL STYLE = TOP RIGHT TOP-MIDDLE
 : TABLE STYLE = LEFT LOWER TOP-LEFT-CORNER TOP-RIGHT-CORNER
 
@@ -17,5 +17,39 @@ KSTR -> [ CORNER LINE TEXT ]
 class Corner {
     has KStr $.str;
     has Int  $.n;
-    has $!cache;   
+    has $!cache;
 }
+
+wcswidth 对某些字符无效 比如 \t
+
+底层实现一个复杂的表格生成类
+
+生成的表格可以修改，即删除行 增加东西
+
+风格的设计
+
+风格类 提供默认的风格 预设置的风格 自定义风格
+
+风格可以微调
+
+需要处理无风格特殊情况
+
+多行文本的处理
+
+使输入的文本自动的分割为多行，即可以讲文本的成员由标量换成数组
+
+给用户提供一个简单的表格生成类
+
+==> begin
+
+风格的实现
+
+style-content {
+    padding-char
+    padding-left
+    padding-right
+    align
+    max-width # multi line
+}
+
+实现一个可以多行化的 Content

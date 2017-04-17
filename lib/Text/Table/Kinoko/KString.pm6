@@ -14,6 +14,10 @@ class KString {
         return $!str;
     }
 
+    method codes() {
+        return $!str.codes;
+    }
+
     method width() {
         return $!width;
     }

@@ -4,15 +4,16 @@ use Text::Table::Kinoko::KString;
 use Text::Table::Kinoko::Exception;
 
 class Content {
-    has KString $.char;
+    has KString @.lines;
+    has KString $.cache;
 
     multi method new(KString :$str) {
-        self.bless( char => $str );
+        self.bless( cache => $str );
     }
 
     multi method new(Str :$str, :$width) {
         self.bless(
-            char => KString.new(:$str, :$width)
+            cache => KString.new(:$str, :$width)
         );
     }
 

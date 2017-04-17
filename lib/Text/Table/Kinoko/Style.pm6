@@ -14,11 +14,11 @@ class Style::Corner {
 
 	method none() {
 		self.new(
-			#`(style => makeCornerArray2([
+			style => makeCornerArray2([
 				['',  '', ''],
 				['',  '', ''],
 				['',  '', ''],
-			]),)
+			]),
 			mode => NONE
 		);
 	}
@@ -252,17 +252,19 @@ class Style::Line {
 
 class Style::Content {
 	has KString $.padding-char;
-	has Int  $.indent;
-	has      $.align;
+	has Int 	$.padding-left;
+	has Int 	$.padding-right;
+	has 		$.align;
 
 	my enum Align 	<< Left Right Middle >>;
 
-	method space (:$indent = 2, :$align = Align::Left) {
-		self.new(
-			padding-char => makeKString(" ", 1),
-			:$indent,
-			:$align
-		);
+	method new (
+		:$padding-char = makeKString(" ", 1),
+		:$padding-left = 2,
+		:$padding-right = 0,
+		:$align = Align::Left
+	) {
+		self.bless( :$padding-char, :$padding-left, :$padding-right, :$align );
 	}
 
 	method align-left() {
@@ -277,6 +279,7 @@ class Style::Content {
 		$!align == Align::Middle;
 	}
 }
+
 
 class Style {
 	has Style::Corner	$.corner-style;

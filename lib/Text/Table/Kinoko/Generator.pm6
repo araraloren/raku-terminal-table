@@ -3,9 +3,7 @@ use v6;
 use Text::Table::Kinoko::KString;
 use Text::Table::Kinoko::Style;
 use Text::Table::Kinoko::Frame;
-use Text::Table::Kinoko::Array2D;
 use Text::Table::Kinoko::Content;
-use Text::Table::Kinoko::DeepClone;
 use Text::Table::Kinoko::Exception;
 
 class Generator {
