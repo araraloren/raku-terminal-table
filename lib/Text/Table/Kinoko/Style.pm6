@@ -1,7 +1,8 @@
 
 use v6;
-use Text::Table::Kinoko::KString;
 use Text::Table::Kinoko::Frame;
+use Text::Table::Kinoko::String;
+use Text::Table::Kinoko::Settings;
 
 constant NONE 		= 'none';
 constant SPACE 		= ' ';
@@ -12,9 +13,20 @@ class Style::Corner {
 	has @.style handles < AT-POS >;
 	has $.mode;
 
+	sub make-corner-array(@array2d) {
+		my @ret;
+
+		for @array2d -> $inner {
+			my @t;
+			@t.push(Corner.new(str => $_)) for @$inner;
+			@ret.push(@t);
+		}
+		return @ret;
+	}
+
 	method none() {
 		self.new(
-			style => makeCornerArray2([
+			style => make-corner-array([
 				['',  '', ''],
 				['',  '', ''],
 				['',  '', ''],
@@ -25,7 +37,7 @@ class Style::Corner {
 
 	method space() {
 		self.new(
-			style => makeCornerArray2([
+			style => make-corner-array([
                 [' ',  ' ', ' '],
                 [' ',  ' ', ' '],
                 [' ',  ' ', ' '],
@@ -37,7 +49,7 @@ class Style::Corner {
 	method single(:$bold, :$bold1, :$bold2) {
 		if ?$bold {
 			return self.new(
-				style => makeCornerArray2([
+				style => make-corner-array([
 	                <┏ ┳ ┓>,
 	                <┣ ╋ ┫>,
 	                <┗ ┻ ┛>,
@@ -47,7 +59,7 @@ class Style::Corner {
 		}
 		if ?$bold1 {
 			return self.new(
-				style => makeCornerArray2([
+				style => make-corner-array([
 	                <┍ ┰ ┑>,
 	                <┝ ┿ ┥>,
 	                <┕ ┸ ┙>,
@@ -57,7 +69,7 @@ class Style::Corner {
 		}
 		if ?$bold2 {
 			return self.new(
-				style => makeCornerArray2([
+				style => make-corner-array([
 	                <┎ ┯ ┒>,
 	                <┠ ╂ ┨>,
 	                <┖ ┷ ┚>,
@@ -66,7 +78,7 @@ class Style::Corner {
 			);
 		}
 		return self.new(
-			style => makeCornerArray2([
+			style => make-corner-array([
 				<┌ ┬ ┐>,
 				<├ ┼ ┤>,
 				<└ ┴ ┘>,
@@ -78,7 +90,7 @@ class Style::Corner {
 	method double(:$single, :$single1) {
 		if ?$single {
 			return self.new(
-				style => makeCornerArray2([
+				style => make-corner-array([
 	                <╒ ╤ ╕>,
 	                <╞ ╪ ╡>,
 	                <╘ ╧ ╛>,
@@ -88,7 +100,7 @@ class Style::Corner {
 		}
 		if ?$single1 {
 			return self.new(
-				style => makeCornerArray2([
+				style => make-corner-array([
 	                <╓ ╥ ╖>,
 	                <╟ ╫ ╢>,
 	                <╙ ╨ ╜>,
@@ -97,7 +109,7 @@ class Style::Corner {
 			);
 		}
 		return self.new(
-			style => makeCornerArray2([
+			style => make-corner-array([
                 <╔ ╦ ╗>,
                 <╠ ╬ ╣>,
                 <╚ ╩ ╝>,
@@ -162,26 +174,30 @@ class Style::Line {
 	has Line $.right;
 	has      $.mode;
 
+	sub make-line(Str $str, $width) is export {
+	    return Line.new(:$str, :$width, n => 1);
+	}
+
 	method none() {
 		self.new(
-			top 		=> makeLine('', 0),
-			h-middle 	=> makeLine('', 0),
-			bottom 		=> makeLine('', 0),
-			left 		=> makeLine('', 0),
-			v-middle 	=> makeLine('', 0),
-			right 		=> makeLine('', 0),
+			top 		=> make-line('', 0),
+			h-middle 	=> make-line('', 0),
+			bottom 		=> make-line('', 0),
+			left 		=> make-line('', 0),
+			v-middle 	=> make-line('', 0),
+			right 		=> make-line('', 0),
 			mode 		=> NONE
 		);
 	}
 
 	method space() {
 		self.new(
-			top 		=> makeLine(' ', 1),
-			h-middle 	=> makeLine(' ', 1),
-			bottom 		=> makeLine(' ', 1),
-			left 		=> makeLine(' ', 1),
-			v-middle 	=> makeLine(' ', 1),
-			right 		=> makeLine(' ', 1),
+			top 		=> make-line(' ', 1),
+			h-middle 	=> make-line(' ', 1),
+			bottom 		=> make-line(' ', 1),
+			left 		=> make-line(' ', 1),
+			v-middle 	=> make-line(' ', 1),
+			right 		=> make-line(' ', 1),
 			mode 		=> SPACE
 		)
 	}
@@ -189,58 +205,58 @@ class Style::Line {
 	multi method single(:$bold) {
 		if ?$bold {
 			return self.new(
-				top 		=> makeLine('━', 1),
-				h-middle 	=> makeLine('━', 1),
-				bottom 		=> makeLine('━', 1),
-				left 		=> makeLine('┃', 1),
-				v-middle 	=> makeLine('┃', 1),
-				right 		=> makeLine('┃', 1),
+				top 		=> make-line('━', 1),
+				h-middle 	=> make-line('━', 1),
+				bottom 		=> make-line('━', 1),
+				left 		=> make-line('┃', 1),
+				v-middle 	=> make-line('┃', 1),
+				right 		=> make-line('┃', 1),
 				mode 		=> SINGLE
 			);
 		}
 		return self.new(
-			top 		=> makeLine('─', 1),
-			h-middle 	=> makeLine('─', 1),
-			bottom 		=> makeLine('─', 1),
-			left 		=> makeLine('│', 1),
-			v-middle 	=> makeLine('│', 1),
-			right 		=> makeLine('│', 1),
+			top 		=> make-line('─', 1),
+			h-middle 	=> make-line('─', 1),
+			bottom 		=> make-line('─', 1),
+			left 		=> make-line('│', 1),
+			v-middle 	=> make-line('│', 1),
+			right 		=> make-line('│', 1),
 			mode 		=> SINGLE
 		);
 	}
 
 	method double() {
 		self.new(
-			top 		=> makeLine('═', 1),
-			h-middle 	=> makeLine('═', 1),
-			bottom 		=> makeLine('═', 1),
-			left 		=> makeLine('║', 1),
-			v-middle 	=> makeLine('║', 1),
-			right 		=> makeLine('║', 1),
+			top 		=> make-line('═', 1),
+			h-middle 	=> make-line('═', 1),
+			bottom 		=> make-line('═', 1),
+			left 		=> make-line('║', 1),
+			v-middle 	=> make-line('║', 1),
+			right 		=> make-line('║', 1),
 			mode 		=> DOUBLE
 		)
 	}
 
 	method dot() {
 		self.new(
-			top 		=> makeLine('╍', 1),
-			h-middle 	=> makeLine('╍', 1),
-			bottom 		=> makeLine('╍', 1),
-			left 		=> makeLine('╏', 1),
-			v-middle 	=> makeLine('╏', 1),
-			right 		=> makeLine('╏', 1),
+			top 		=> make-line('╍', 1),
+			h-middle 	=> make-line('╍', 1),
+			bottom 		=> make-line('╍', 1),
+			left 		=> make-line('╏', 1),
+			v-middle 	=> make-line('╏', 1),
+			right 		=> make-line('╏', 1),
 			mode 		=> Style::Type::Double2
 		)
 	}
 
 	method dot2() {
 		self.new(
-			top 		=> makeLine('╍', 1),
-			h-middle 	=> makeLine('╍', 1),
-			bottom 		=> makeLine('╍', 1),
-			left 		=> makeLine('╏', 1),
-			v-middle 	=> makeLine('╏', 1),
-			right 		=> makeLine('╏', 1),
+			top 		=> make-line('╍', 1),
+			h-middle 	=> make-line('╍', 1),
+			bottom 		=> make-line('╍', 1),
+			left 		=> make-line('╏', 1),
+			v-middle 	=> make-line('╏', 1),
+			right 		=> make-line('╏', 1),
 			mode 		=> Style::Type::Double2
 		)
 	}
@@ -251,20 +267,30 @@ class Style::Line {
 }
 
 class Style::Content {
-	has KString $.padding-char;
+	has String $.padding-char;
 	has Int 	$.padding-left;
 	has Int 	$.padding-right;
 	has 		$.align;
+	has Bool    $.split-word;
 
 	my enum Align 	<< Left Right Middle >>;
 
 	method new (
-		:$padding-char = makeKString(" ", 1),
+		:$padding-char = String.new(str => " ", width => 1),
 		:$padding-left = 2,
 		:$padding-right = 0,
-		:$align = Align::Left
+		:$align = Align::Left,
+		:$split-word = False,
 	) {
-		self.bless( :$padding-char, :$padding-left, :$padding-right, :$align );
+		self.bless(
+			:$padding-char, :$padding-left,
+			:$padding-right, :$align,
+			:$split-word
+		);
+	}
+
+	method space () {
+		self.new();
 	}
 
 	method align-left() {
@@ -277,6 +303,10 @@ class Style::Content {
 
 	method align-middle() {
 		$!align == Align::Middle;
+	}
+
+	method padding-width() {
+		($!padding-left + $!padding-right) * $!padding-char.width;
 	}
 }
 
