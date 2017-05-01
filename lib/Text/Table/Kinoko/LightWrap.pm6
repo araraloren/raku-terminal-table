@@ -1,29 +1,29 @@
 
 use v6;
-use Terminal::WCWidth;
-use Text::Table::Kinoko::KString;
+use Text::Tabs;
+use Text::Table::Kinoko::String;
 
 unit module LightWrap;
 
-grammar String {
+grammar Sentence {
 	token TOP {
 		[ <zh> | <en> | <other> ]+
 	}
 
-	token other { 
+	token other {
 		<!zh> <!en> .
 	}
 
-	token zh { 
-		<:Block("CJK Unified Ideographs")> 
+	token zh {
+		<:Block("CJK Unified Ideographs")>
 	}
 
-	token en { 
+	token en {
 		<:L>+
 	}
 }
 
-class String::Actions {
+class Sentence::Actions {
 	has $.max;
 	has $.line;
 	has $.current;
@@ -35,17 +35,17 @@ class String::Actions {
 	}
 
 	method other($/) {
-		self.__concat_line($/.Str => wcswidth($/.Str));
+		self.__concat_line($/.Str => noexpand-width($/.Str));
 	}
 
 	method zh($/) {
-		self.__concat_line($/.Str => wcswidth($/.Str));
+		self.__concat_line($/.Str => noexpand-width($/.Str));
 	}
 
 	method en($/) {
-		my ($key, $value) = ($/.Str, wcswidth($/.Str));
-		
-		if $!force && $value > $!max {
+		my ($key, $value) = ($/.Str, noexpand-width($/.Str));
+
+		if $!force && ($value > $!max || ($value + $!current > $!max)) {
 			self.__concat_line($key.comb());
 		} else {
 			self.__concat_line($key => $value);
@@ -58,35 +58,51 @@ class String::Actions {
 
 	multi method __concat_line(@ens) {
 		for @ens -> $ch {
-			my $len = wcswidth($ch);
+			my $len = noexpand-width($ch);
 			if $!current + $len + 1 == $!max {
-				@!lines.push($!line ~ $ch ~ '-');
+				self.__push($!line ~ $ch ~ '-');
 				self.__reset();
-			} else {
-				($!line, $!current) = ($!line ~ $ch, $!current + $len);
 			}
+			($!line, $!current) = ($!line ~ $ch, $!current + $len);
 		}
 	}
 
 	multi method __concat_line(Pair $str) {
 		if $!current + $str.value > $!max {
-			@!lines.push($!line);
+			self.__push($!line);
 			self.__reset();
-		} else {
-			($!line, $!current) = ($!line ~ $str.key, $!current + $str.value);
 		}
+		($!line, $!current) = ($!line ~ $str.key, $!current + $str.value);
+	}
+
+	method __push(Str $str) {
+		@!lines.push(String.new(str => $str, width => noexpand-width($str)));
 	}
 
 	method lines() {
 		if $!line ne "" {
-			@!lines.push($!line);
+			self.__push($!line);
 			self.__reset();
 		}
 		@!lines;
 	}
 }
 
-sub split-w(Str $str, Int $length, :$force = False) is export {
-	String.parse($str, :actions(my $a = String::Actions.new(max => $length, :$force)));
+sub split-w($str, Int $length, :$force = False) {
+	Sentence.parse($str, :actions(my $a = Sentence::Actions.new(max => $length, :$force)));
 	$a.lines();
+}
+
+multi sub wrap(String $str, Int :$max-width, Int :$tabstop, Bool :$force = False) is export {
+	my @ret = [];
+	@ret.append(split-w($_, $max-width, :$force)) for @(expand(split(/\n/, $str), $tabstop));
+	return @ret>>.unexpand;
+}
+
+multi sub wrap(@strs, Int :$max-width, Int :$tabstop, Bool :$force = False) is export {
+	my @ret = [];
+	for @strs -> $str {
+		@ret.append(split-w($_, $max-width, :$force)) for @(expand(split(/\n/, $str), $tabstop));
+	}
+	return @ret>>.unexpand;
 }
