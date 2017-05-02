@@ -168,7 +168,7 @@ class Content does Iterable {
     method extend-v(Int $h) {
         my @temp = @!lines>>.Str();
         for self.height() ...^ $h {
-            @temp.push(' ' x self.max-widths())
+            @temp.push(' ' x self.max-width())
         }
         self.new(@temp);
     }
