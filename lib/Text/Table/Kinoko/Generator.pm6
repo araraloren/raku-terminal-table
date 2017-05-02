@@ -230,9 +230,10 @@ class Generator {
                     "".say;
                     for ^@(@!content[$index])[0].height -> $r {
                         for @(@!frame[$findex + 1]) Z, @(@!content[$index]) -> ($f, $c) {
-                            print $f.lines()[$r].Str(), $c.lines()[$r].Str();
+                            print $f.lines()[$r].Str();
+                            print $c.lines()[$r].Str();
                         }
-                        say @(@!frame[$findex + 1])[* - 1][$r].Str();
+                        say @(@!frame[$findex + 1])[* - 1].lines()[$r].Str();
                     }
                 }
                 say @!frame[* - 1]>>.Str().join("");
