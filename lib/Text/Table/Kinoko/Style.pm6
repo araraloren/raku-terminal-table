@@ -5,17 +5,19 @@ use Text::Table::Kinoko::String;
 use Text::Table::Kinoko::Settings;
 
 constant NONE 		= 'none';
+constant ASCII 		= '+';
 constant SPACE 		= ' ';
+constant DOT 		= '..';
 constant SINGLE 	= '-';
-constant DOUBLE 	= '--';
+constant DOUBLE 	= '=';
+constant ROUND      = 'o';
 
 class Style::Corner {
 	has @.style handles < AT-POS >;
 	has $.mode;
 
 	sub make-corner-array(@array2d) {
-		my @ret;
-
+		my @ret = Array.new;
 		for @array2d -> $inner {
 			my @t;
 			@t.push(Corner.new(str => $_)) for @$inner;
@@ -24,98 +26,155 @@ class Style::Corner {
 		return @ret;
 	}
 
-	method none() {
-		self.new(
-			style => make-corner-array([
+	method new(:@style, :$mode) {
+		self.bless(style => make-corner-array(@style), :$mode);
+	}
+
+	#`(
+		pass :count to get style number, the style index base on zero.
+	)
+	method none(Int $index = 0, :$count) {
+		return 1 if ?$count;
+		return self.new(
+			style => [
 				['',  '', ''],
 				['',  '', ''],
 				['',  '', ''],
-			]),
+			],
 			mode => NONE
 		);
 	}
 
-	method space() {
-		self.new(
-			style => make-corner-array([
+	method space(Int $index = 0, :$count) {
+		return 1 if ?$count;
+		return self.new(
+			style => [
                 [' ',  ' ', ' '],
                 [' ',  ' ', ' '],
                 [' ',  ' ', ' '],
-            ]),
-			mode => Style::Type::Space
+            ],
+			mode => SPACE
 		);
 	}
 
-	method single(:$bold, :$bold1, :$bold2) {
-		if ?$bold {
-			return self.new(
-				style => make-corner-array([
-	                <┏ ┳ ┓>,
-	                <┣ ╋ ┫>,
-	                <┗ ┻ ┛>,
-	            ]),
-				mode => SINGLE
-			);
-		}
-		if ?$bold1 {
-			return self.new(
-				style => make-corner-array([
-	                <┍ ┰ ┑>,
-	                <┝ ┿ ┥>,
-	                <┕ ┸ ┙>,
-	            ]),
-				mode => SINGLE
-			);
-		}
-		if ?$bold2 {
-			return self.new(
-				style => make-corner-array([
-	                <┎ ┯ ┒>,
-	                <┠ ╂ ┨>,
-	                <┖ ┷ ┚>,
-	            ]),
-				mode => SINGLE
-			);
-		}
+	method ascii(Int $index = 0, :$count) {
+		return 1 if ?$count;
 		return self.new(
-			style => make-corner-array([
-				<┌ ┬ ┐>,
-				<├ ┼ ┤>,
-				<└ ┴ ┘>,
-			]),
-			mode => SINGLE
+			style => [
+				['+',  '+', '+'],
+				['+',  '+', '+'],
+				['+',  '+', '+'],
+			],
+			mode => ASCII
 		);
 	}
 
-	method double(:$single, :$single1) {
-		if ?$single {
-			return self.new(
-				style => make-corner-array([
-	                <╒ ╤ ╕>,
-	                <╞ ╪ ╡>,
-	                <╘ ╧ ╛>,
-	            ]),
-				mode => DOUBLE
-			);
+	method single(Int $index = 0, :$count) {
+		return 4 if ?$count;
+		given $index {
+			when 0 {
+				return self.new(
+					style => [
+						<┌ ┬ ┐>,
+						<├ ┼ ┤>,
+						<└ ┴ ┘>,
+					],
+					mode => SINGLE
+				);
+			}
+			when 1 {
+				return self.new(
+					style => [
+		                <┏ ┳ ┓>,
+		                <┣ ╋ ┫>,
+		                <┗ ┻ ┛>,
+		            ],
+					mode => SINGLE
+				);
+			}
+			when 2 {
+				return self.new(
+					style => [
+		                <┍ ┰ ┑>,
+		                <┝ ┿ ┥>,
+		                <┕ ┸ ┙>,
+		            ],
+					mode => SINGLE
+				);
+			}
+			when 3 {
+				return self.new(
+					style => [
+		                <┎ ┯ ┒>,
+		                <┠ ╂ ┨>,
+		                <┖ ┷ ┚>,
+		            ],
+					mode => SINGLE
+				);
+			}
 		}
-		if ?$single1 {
-			return self.new(
-				style => make-corner-array([
-	                <╓ ╥ ╖>,
-	                <╟ ╫ ╢>,
-	                <╙ ╨ ╜>,
-	            ]),
-				mode => DOUBLE
-			);
+	}
+
+	method double(Int $index = 0, :$count) {
+		return 3 if ?$count;
+		given $index {
+			when 0 {
+				return self.new(
+					style => [
+		                <╔ ╦ ╗>,
+		                <╠ ╬ ╣>,
+		                <╚ ╩ ╝>,
+		            ],
+					mode => DOUBLE
+				);
+			}
+			when 1 {
+				return self.new(
+					style => [
+		                <╒ ╤ ╕>,
+		                <╞ ╪ ╡>,
+		                <╘ ╧ ╛>,
+		            ],
+					mode => DOUBLE
+				);
+			}
+			when 2 {
+				return self.new(
+					style => [
+		                <╓ ╥ ╖>,
+		                <╟ ╫ ╢>,
+		                <╙ ╨ ╜>,
+		            ],
+					mode => DOUBLE
+				);
+			}
 		}
-		return self.new(
-			style => make-corner-array([
-                <╔ ╦ ╗>,
-                <╠ ╬ ╣>,
-                <╚ ╩ ╝>,
-            ]),
-			mode => DOUBLE
-		);
+	}
+
+	method round(Int $index = 0, :$count) {
+		return 2 if ?$count;
+		given $index {
+			when 1 {
+				return self.new(
+					style => [
+						<╭ ╦ ╮>,
+						<╠ ╬ ╣>,
+						<╰ ╩ ╯>,
+					],
+					mode => ROUND
+				);
+			}
+			when 0 {
+				return self.new(
+					style => [
+						<╭ ┬ ╮>,
+						<├ ┼ ┤>,
+						<╰ ┴ ╯>,
+					],
+					mode => ROUND
+				);
+			}
+		}
 	}
 
 	my enum Pos  <<  :Top(0) :Bottom(2) :Left(0) :Middle(1) :Right(2) >>;
@@ -178,87 +237,190 @@ class Style::Line {
 	    return Line.new(:$str, :$width, n => 1);
 	}
 
-	method none() {
-		self.new(
-			top 		=> make-line('', 0),
-			h-middle 	=> make-line('', 0),
-			bottom 		=> make-line('', 0),
-			left 		=> make-line('', 0),
-			v-middle 	=> make-line('', 0),
-			right 		=> make-line('', 0),
+	method new(:$mode, *%args) {
+		my @strs = [];
+		for %args.keys() -> $key {
+			@strs.push(make-line(|%args{$key}));
+		}
+		self.bless(|%(
+				%args.keys() Z=> @strs
+			),
+			:$mode
+		);
+	}
+
+	method none(Int $index = 0, :$count) {
+		return 1 if ?$count;
+		return self.new(
+			top 		=> ['', 0],
+			h-middle 	=> ['', 0],
+			bottom 		=> ['', 0],
+			left 		=> ['', 0],
+			v-middle 	=> ['', 0],
+			right 		=> ['', 0],
 			mode 		=> NONE
 		);
 	}
 
-	method space() {
-		self.new(
-			top 		=> make-line(' ', 1),
-			h-middle 	=> make-line(' ', 1),
-			bottom 		=> make-line(' ', 1),
-			left 		=> make-line(' ', 1),
-			v-middle 	=> make-line(' ', 1),
-			right 		=> make-line(' ', 1),
+	method ascii(Int $index = 0, :$count) {
+		return 1 if ?$count;
+		return self.new(
+			top 		=> ['-', 1],
+			h-middle 	=> ['-', 1],
+			bottom 		=> ['-', 1],
+			left 		=> ['|', 1],
+			v-middle 	=> ['|', 1],
+			right 		=> ['|', 1],
+			mode 		=> ASCII
+		)
+	}
+
+	method space(Int $index = 0, :$count) {
+		return 1 if ?$count;
+		return self.new(
+			top 		=> [' ', 1],
+			h-middle 	=> [' ', 1],
+			bottom 		=> [' ', 1],
+			left 		=> [' ', 1],
+			v-middle 	=> [' ', 1],
+			right 		=> [' ', 1],
 			mode 		=> SPACE
 		)
 	}
 
-	multi method single(:$bold) {
-		if ?$bold {
-			return self.new(
-				top 		=> make-line('━', 1),
-				h-middle 	=> make-line('━', 1),
-				bottom 		=> make-line('━', 1),
-				left 		=> make-line('┃', 1),
-				v-middle 	=> make-line('┃', 1),
-				right 		=> make-line('┃', 1),
-				mode 		=> SINGLE
-			);
+	multi method single(Int $index = 0, :$count) {
+		return 4 if ?$count;
+		given $index {
+			when 0 {
+				return self.new(
+					top 		=> ['─', 1],
+					h-middle 	=> ['─', 1],
+					bottom 		=> ['─', 1],
+					left 		=> ['│', 1],
+					v-middle 	=> ['│', 1],
+					right 		=> ['│', 1],
+					mode 		=> SINGLE
+				);
+			}
+			when 1 {
+				return self.new(
+					top 		=> ['━', 1],
+					h-middle 	=> ['━', 1],
+					bottom 		=> ['━', 1],
+					left 		=> ['┃', 1],
+					v-middle 	=> ['┃', 1],
+					right 		=> ['┃', 1],
+					mode 		=> SINGLE
+				);
+			}
+			when 2 {
+				return self.new(
+					top 		=> ['╼', 1],
+					h-middle 	=> ['╼', 1],
+					bottom 		=> ['╼', 1],
+					left 		=> ['╽', 1],
+					v-middle 	=> ['╽', 1],
+					right 		=> ['╽', 1],
+					mode 		=> SINGLE
+				);
+			}
+			when 3 {
+				return self.new(
+					top 		=> ['╾', 1],
+					h-middle 	=> ['╾', 1],
+					bottom 		=> ['╾', 1],
+					left 		=> ['╿', 1],
+					v-middle 	=> ['╿', 1],
+					right 		=> ['╿', 1],
+					mode 		=> SINGLE
+				);
+			}
 		}
-		return self.new(
-			top 		=> make-line('─', 1),
-			h-middle 	=> make-line('─', 1),
-			bottom 		=> make-line('─', 1),
-			left 		=> make-line('│', 1),
-			v-middle 	=> make-line('│', 1),
-			right 		=> make-line('│', 1),
-			mode 		=> SINGLE
-		);
 	}
 
-	method double() {
-		self.new(
-			top 		=> make-line('═', 1),
-			h-middle 	=> make-line('═', 1),
-			bottom 		=> make-line('═', 1),
-			left 		=> make-line('║', 1),
-			v-middle 	=> make-line('║', 1),
-			right 		=> make-line('║', 1),
+	method double(Int $index = 0, :$count) {
+		return 1 if ?$count;
+		return self.new(
+			top 		=> ['═', 1],
+			h-middle 	=> ['═', 1],
+			bottom 		=> ['═', 1],
+			left 		=> ['║', 1],
+			v-middle 	=> ['║', 1],
+			right 		=> ['║', 1],
 			mode 		=> DOUBLE
 		)
 	}
 
-	method dot() {
-		self.new(
-			top 		=> make-line('╍', 1),
-			h-middle 	=> make-line('╍', 1),
-			bottom 		=> make-line('╍', 1),
-			left 		=> make-line('╏', 1),
-			v-middle 	=> make-line('╏', 1),
-			right 		=> make-line('╏', 1),
-			mode 		=> Style::Type::Double2
-		)
-	}
-
-	method dot2() {
-		self.new(
-			top 		=> make-line('╍', 1),
-			h-middle 	=> make-line('╍', 1),
-			bottom 		=> make-line('╍', 1),
-			left 		=> make-line('╏', 1),
-			v-middle 	=> make-line('╏', 1),
-			right 		=> make-line('╏', 1),
-			mode 		=> Style::Type::Double2
-		)
+	method dot(Int $index = 0, :$count) {
+		return 6 if ?$count;
+		given $index {
+			when 0 {
+				return self.new(
+					top 		=> ['╌', 1],
+					h-middle 	=> ['╌', 1],
+					bottom 		=> ['╌', 1],
+					left 		=> ['╎', 1],
+					v-middle 	=> ['╎', 1],
+					right 		=> ['╎', 1],
+					mode 		=> DOT
+				)
+			}
+			when 1 {
+				return self.new(
+					top 		=> ['╍', 1],
+					h-middle 	=> ['╍', 1],
+					bottom 		=> ['╍', 1],
+					left 		=> ['╏', 1],
+					v-middle 	=> ['╏', 1],
+					right 		=> ['╏', 1],
+					mode 		=> DOT
+				)
+			}
+			when 2 {
+				return self.new(
+					top 		=> ['┅', 1],
+					h-middle 	=> ['┅', 1],
+					bottom 		=> ['┅', 1],
+					left 		=> ['┇', 1],
+					v-middle 	=> ['┇', 1],
+					right 		=> ['┇', 1],
+					mode 		=> DOT
+				);
+			}
+			when 3 {
+				return self.new(
+					top 		=> ['┄', 1],
+					h-middle 	=> ['┄', 1],
+					bottom 		=> ['┄', 1],
+					left 		=> ['┆', 1],
+					v-middle 	=> ['┆', 1],
+					right 		=> ['┆', 1],
+					mode 		=> DOT
+				);
+			}
+			when 4 {
+				return self.new(
+					top 		=> ['┈', 1],
+					h-middle 	=> ['┈', 1],
+					bottom 		=> ['┈', 1],
+					left 		=> ['┊', 1],
+					v-middle 	=> ['┊', 1],
+					right 		=> ['┊', 1],
+					mode 		=> DOT
+				);
+			}
+			when 5 {
+				return self.new(
+					top 		=> ['┉', 1],
+					h-middle 	=> ['┉', 1],
+					bottom 		=> ['┉', 1],
+					left 		=> ['┋', 1],
+					v-middle 	=> ['┋', 1],
+					right 		=> ['┋', 1],
+					mode 		=> DOT
+				);
+			}
+		}
 	}
 
 	method is-none() {
