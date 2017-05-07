@@ -1,4 +1,4 @@
-# Text-Table-Kinoko
+# Terminal-Table
 
 Advanced table generate module for perl6
 
