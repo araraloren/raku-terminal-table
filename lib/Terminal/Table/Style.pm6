@@ -1,16 +1,18 @@
 
 use v6;
-use Text::Table::Kinoko::Frame;
-use Text::Table::Kinoko::String;
-use Text::Table::Kinoko::Settings;
+use Terminal::Table::Frame;
+use Terminal::Table::String;
+use Terminal::Table::Settings;
 
-constant NONE 		= 'none';
-constant ASCII 		= '+';
-constant SPACE 		= ' ';
-constant DOT 		= '..';
-constant SINGLE 	= '-';
-constant DOUBLE 	= '=';
-constant ROUND      = 'o';
+enum Style::Default <<
+	:NONE('none')
+	:ASCII('ascii')
+	:SPACE('space')
+	:DOT('dot')
+	:SINGLE('single')
+	:DOUBLE('double')
+	:ROUND('round')
+>>;
 
 class Style::Corner {
 	has @.style handles < AT-POS >;
@@ -20,14 +22,15 @@ class Style::Corner {
 		my @ret = Array.new;
 		for @array2d -> $inner {
 			my @t;
-			@t.push(Corner.new(str => $_)) for @$inner;
+			@t.push(Corner.new(base => String.new(value => $_))) for @$inner;
 			@ret.push(@t);
 		}
 		return @ret;
 	}
 
-	method new(:@style, :$mode) {
-		self.bless(style => make-corner-array(@style), :$mode);
+	submethod TWEAK(:@style, :$mode) {
+		@!style = make-corner-array(@style);
+		$!mode  = $mode;
 	}
 
 	#`(
@@ -234,7 +237,7 @@ class Style::Line {
 	has      $.mode;
 
 	sub make-line(Str $str, $width) is export {
-	    return Line.new(:$str, :$width, n => 1);
+	    return Line.new(base => String.new(value => $str, :$width));
 	}
 
 	method new(:$mode, *%args) {
@@ -428,43 +431,33 @@ class Style::Line {
 	}
 }
 
+enum Align <<
+	:LEFT(0)
+	:RIGHT(1)
+	:MIDDLE(2)
+>>;
+
 class Style::Content {
-	has String $.padding-char;
-	has Int 	$.padding-left;
-	has Int 	$.padding-right;
-	has 		$.align;
-	has Bool    $.split-word;
+	has String $.padding-char = String.new(value => " ", width => 1);
+	has Int 	$.padding-left  = 0;
+	has Int 	$.padding-right = 0;
+	has 		$.align         = Align::LEFT;
+	has Bool    $.split-word    = False;
 
-	my enum Align 	<< Left Right Middle >>;
-
-	method new (
-		:$padding-char = String.new(str => " ", width => 1),
-		:$padding-left = 2,
-		:$padding-right = 0,
-		:$align = Align::Left,
-		:$split-word = False,
-	) {
-		self.bless(
-			:$padding-char, :$padding-left,
-			:$padding-right, :$align,
-			:$split-word
-		);
-	}
-
-	method space () {
-		self.new();
+	method space() {
+		self.new(:padding-char(String.new(value => " ", width => 1)));
 	}
 
 	method align-left() {
-		$!align == Align::Left;
+		$!align == Align::LEFT;
 	}
 
 	method align-right() {
-		$!align == Align::Right;
+		$!align == Align::RIGHT;
 	}
 
 	method align-middle() {
-		$!align == Align::Middle;
+		$!align == Align::MIDDLE;
 	}
 
 	method padding-width() {
@@ -478,6 +471,14 @@ class Style {
 	has Style::Line		$.line-style;
 	has Style::Content	$.content-style;
 
+	submethod TWEAK(*%args) {
+		if %args<corner-style>.is-none() {
+			unless %args<line-style>.is-none() {
+				X::Kinoko::Error.new(msg => 'none style expect!').throw();
+			}
+		}
+	}
+
 	method corner {
 		$!corner-style;
 	}
@@ -488,5 +489,27 @@ class Style {
 
 	method content {
 		$!content-style;
+	}
+}
+
+class Color::String {
+	# style for Terminal::ANSIColor
+	has @.color;
+	has $.enabled = True;
+
+	method color-style() {
+		@!color.join(" ");
+	}
+
+	method append(@color) {
+		@!color.append(@color);
+	}
+
+	method enable() {
+		$!enabled = True;
+	}
+
+	method disable() {
+		$!enabled = False;
 	}
 }

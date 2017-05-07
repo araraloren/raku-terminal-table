@@ -1,9 +1,11 @@
 
 use v6;
-use Text::Table::Kinoko::String;
-use Text::Table::Kinoko::Generator;
-use Text::Table::Kinoko::Style;
-use Text::Table::Kinoko::Frame;
+use Terminal::Table::String;
+use Terminal::Table::Generator;
+use Terminal::Table::Style;
+use Terminal::Table::Frame;
+use Terminal::Table::Shader;
+use Terminal::ANSIColor;
 
 my $g = Generator.new(
     style => Style.new(
@@ -17,8 +19,6 @@ $g.add-cell('语言');
 $g.add-cell('sample');
 $g.add-cell('markup');
 $g.end-line;
-
-$g.print;
 
 my $g1 = Generator.new(
     style => Style.new(
@@ -34,17 +34,16 @@ $g1.add-cell('中国、新加坡');
 $g1.end-line;
 $g1.add-cell('にちぶん');
 $g1.add-cell('こんにちは');
-$g1.add-cell('日本');
+$g1.add-cell('日本', Color::String.new(color => <red>));
 $g1.end-line;
-$g1.add-cell('English');
-$g1.add-cell('Are you ok?
+$g1.add-cell(Shader.colour('English', Color::String.new(color => <red underline>)));
+$g1.add-cell('
+    Are you ok?
 Where are you from ?');
 $g1.add-cell('American、England、Australian .etc');
 $g1.end-line;
 
-$g1.print;
-
 $g.join($g1, :preserve-style(False));
-my $table = $g.gen-table();
-
-$table.print;
+my $table = $g.generator();
+$table.colour(1, 1, Color::String.new(color => <green>), 0);
+$table.print(:color);

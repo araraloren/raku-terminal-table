@@ -1,17 +1,30 @@
 {
-    "perl"        : "6",
-    "name"        : "Getopt::Kinoko",
-    "version"     : "0.2.6",
-    "description" : "A command line parsing tool which written in Perl6",
-    "depends"     : ["Terminal::WCWidth"],
+    "perl"        : "6.c",
+    "name"        : "Terminal::Table",
+    "version"     : "0.0.1",
+    "license"     : "MIT",
+    "description" : "Advanced table generate module for perl6",
+    "depends"     : [
+        "Terminal::ANSIColor",
+        "Terminal::WCWidth",
+        "Text::Tabs",
+    ],
     "provides"    : {
-        "Getopt::Kinoko"				    : "lib/Getopt/Kinoko.pm6"
+        "Terminal::Table"				    : "lib/Terminal/Table.pm6",
+        "Terminal::Table::String.pm6"       : "lib/Terminal/Table/String.pm6",
+        "Terminal::Table::Style.pm6"        : "lib/Terminal/Table/Style.pm6",
+        "Terminal::Table::Shader.pm6"       : "lib/Terminal/Table/Shader.pm6",
+        "Terminal::Table::Settings.pm6"     : "lib/Terminal/Table/Settings.pm6",
+        "Terminal::Table::Frame.pm6"        : "lib/Terminal/Table/Frame.pm6",
+        "Terminal::Table::LightWrap.pm6"    : "lib/Terminal/Table/LightWrap.pm6",
+        "Terminal::Table::Generator.pm6"    : "lib/Terminal/Table/Generator.pm6",
+        "Terminal::Table::Exception.pm6"    : "lib/Terminal/Table/Exception.pm6",
     },
 	"auth" : "github:araraloren",
     "authors" : "Loren",
-    "source-url"  : "git://github.com/araraloren/Getopt-Kinoko.git",
+    "source-url"  : "git://github.com/araraloren/perl6-terminal-table.git",
     "support" : {
-        "bugtracker" : "https://github.com.araraloren/Getopt-Kinoko/issues",
-        "source" : "git://github.com/araraloren/Getopt-Kinoko.git"
+        "bugtracker" : "https://github.com.araraloren/perl6-terminal-table/issues",
+        "source" : "git://github.com/araraloren/perl6-terminal-table.git"
     }
 }

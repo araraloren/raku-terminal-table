@@ -1,7 +1,7 @@
 
 use v6;
 use Text::Tabs;
-use Text::Table::Kinoko::String;
+use Terminal::Table::String;
 
 unit module LightWrap;
 
@@ -76,7 +76,7 @@ class Sentence::Actions {
 	}
 
 	method __push(Str $str) {
-		@!lines.push(String.new(str => $str, width => noexpand-width($str)));
+		@!lines.push(String.new(value => $str, width => noexpand-width($str)));
 	}
 
 	method lines() {
