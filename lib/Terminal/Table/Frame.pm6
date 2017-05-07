@@ -166,12 +166,12 @@ class Content {
                         $cp.wr += ($style.padding-char.width * ($padding-count div 2));
                         $cp.pr ~= ($padding-count %% 2 ?? "" !! $style.padding-char);
                         $cp.wr += ($padding-count %% 2 ?? 0 !! $style.padding-char.width);
-                    } elsif $style.align-right {
+                    } elsif $style.align-left {
                         my $padding = $style.padding-char x $padding-count;
                         $str ~= $line;
                         $cp.pr ~= $padding;
                         $cp.wr += ($style.padding-char.width * $padding-count);
-                    } elsif $style.align-left {
+                    } elsif $style.align-right {
                         my $padding = $style.padding-char x $padding-count;
                         $cp.pl ~= $padding;
                         $cp.wl += ($style.padding-char.width * $padding-count);
