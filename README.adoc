@@ -2,14 +2,36 @@
 
 Advanced table generate module for perl6
 
-# Description
+# Usage
+
+## Example
+
+[source, perl6]
+--------------------------
+use Terminal::Table;
+
+my @data = [
+    [ "Language", "Example" ],
+    [ "Chinese",  "你吃饭了吗？\n你好！\n你从哪里来？" ],
+    [ "English",  "Nice to meet you!\nWhere are you from?" ],
+    [ "Janpanese","ありがとうございます。\nいただきます！"],
+    [ "Korean",   "안녕하세요！"],
+];
+
+print-table(@data);
+--------------------------
 
 # Installation
+
+[source, shell]
+--------------------------
+git clone https://github.com/araraloren/perl6-terminal-table
+
+cd perl6-terminal-table && zef install .
+--------------------------
 
 # License
 
     The MIT License (MIT).
-
-# Usage
 
 # TODO
