@@ -81,3 +81,50 @@ sub array-to-table(@data, @max-widths = [], :$style = Style::Default::ASCII) is 
     $generator.generate(@max-widths);
     $generator.to-array(:color);
 }
+
+
+=begin pod
+
+=head1 NAME
+
+Terminal::Table - Advanced table generate module for perl6
+
+=head1 SYNOPSIS
+
+=begin code
+use Terminal::Table;
+
+my @data = [
+    [ "Language", "Example" ],
+    [ "Chinese",  "你吃饭了吗？\n你好！\n你从哪里来？" ],
+    [ "English",  "Nice to meet you!\nWhere are you from?" ],
+    [ "Janpanese","ありがとうございます。\nいただきます！"],
+    [ "Korean",   "안녕하세요！"],
+];
+
+print-table(@data);
+=end code
+
+=head1 DESCRIPTION
+
+Terminal::Table can generate ascii table or unicode table output
+in terminals. It can be simple use high level interface C<&print-table>,
+or use class C<Generator> in complex way.
+
+=head2 C<print-table(@data, @max-widths = [], :$style = Style::Default::ASCII)>
+
+=item @data
+
+    Table data, is a two-dimension array
+
+=item @max-widths = []
+
+    Maximum width of table column, is I<-1> when not set.
+
+=item :$style = Style::Default::ASCII
+
+    Table style, default is I<ASCII> style.
+
+C<&print-table> is a simple interface to generate a table.
+
+=end pod
