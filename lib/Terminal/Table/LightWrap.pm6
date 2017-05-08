@@ -7,19 +7,28 @@ unit module LightWrap;
 
 grammar Sentence {
 	token TOP {
-		[ <zh> | <en> | <other> ]+
+		[ <splited> | <splited-by-block> | <other> ]+
 	}
 
 	token other {
-		<!zh> <!en> .
+		<!splited> <!splited-by-block> .
 	}
 
-	token zh {
-		<:Block("CJK Unified Ideographs")>
+	token splited {
+		<:Block("Afaka")>
+		| <:Block("Armenian")>
+		| <:Block("Blissymbols")>
+		| <:Block("Han")>
+		| <:Block("Hangul Syllables")>
+		| <:Block("Hiragana")>
+		| <:Block("Katakana")>
 	}
 
-	token en {
-		<:L>+
+	token splited-by-block {
+		<:Block("Arabic")>
+		| <:Block("Balinese")>
+		| <:Block("Bengali")>
+		| <:Block("Latin")>
 	}
 }
 
@@ -38,11 +47,12 @@ class Sentence::Actions {
 		self.__concat_line($/.Str => noexpand-width($/.Str));
 	}
 
-	method zh($/) {
+	method splited($/) {
 		self.__concat_line($/.Str => noexpand-width($/.Str));
 	}
 
-	method en($/) {
+	method splited-by-block($/) {
+		dd $/;
 		my ($key, $value) = ($/.Str, noexpand-width($/.Str));
 
 		if $!force && ($value > $!max || ($value + $!current > $!max)) {
@@ -59,7 +69,7 @@ class Sentence::Actions {
 	multi method __concat_line(@ens) {
 		for @ens -> $ch {
 			my $len = noexpand-width($ch);
-			if $!current + $len + 1 == $!max {
+			if $!current + $len + 1 == $!max && $!current != 0 {
 				self.__push($!line ~ $ch ~ '-');
 				self.__reset();
 			}
@@ -68,7 +78,7 @@ class Sentence::Actions {
 	}
 
 	multi method __concat_line(Pair $str) {
-		if $!current + $str.value > $!max {
+		if $!current + $str.value > $!max && $!current != 0 {
 			self.__push($!line);
 			self.__reset();
 		}
