@@ -387,7 +387,7 @@ class Generator {
                 self;
             }
 
-            multi method hide-frame(WhateverCode $wc, :$v) {
+            multi method hide(WhateverCode $wc, :$v) {
                 if ?$v {
                     @!v-frame-visibility[$wc] = False;
                 } else {
@@ -396,11 +396,29 @@ class Generator {
                 self;
             }
 
-            multi method hide-frame(Int $index, :$v) {
+            multi method hide(Int $index, :$v) {
                 if ?$v {
                     @!v-frame-visibility[$index] = False;
                 } else {
                     @!h-frame-visibility[$index] = False;
+                }
+                self;
+            }
+
+            multi method unhide(WhateverCode $wc, :$v) {
+                if ?$v {
+                    @!v-frame-visibility[$wc] = True;
+                } else {
+                    @!h-frame-visibility[$wc] = True;
+                }
+                self;
+            }
+
+            multi method unhide(Int $index, :$v) {
+                if ?$v {
+                    @!v-frame-visibility[$index] = True;
+                } else {
+                    @!h-frame-visibility[$index] = True;
                 }
                 self;
             }
