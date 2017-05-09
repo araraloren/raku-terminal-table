@@ -22,27 +22,29 @@ class Generator {
     }
 
     multi sub make-string(Str $str) {
-        my $str-style = Shader.extract-style($str);
-        if $str-style !~~ "" {
-            my $style = Color::String.new(color => $str-style.split(/\s+/, :skip-empty));
-            return String.new(value => Shader.wipe-style($str), :$style);
-        } else {
-            return String.new(value => $str);
+        if Shader.has-color($str) {
+            my $str-style = Shader.extract-style($str);
+            if $str-style !~~ "" {
+                my $style = Color::String.new(color => $str-style.split(/\s+/, :skip-empty));
+                return String.new(value => Shader.wipe-style($str), :$style);
+            }
         }
+        return String.new(value => $str);
     }
 
     multi sub make-string(Str $str, $style) {
-        my $str-style = Shader.extract-style($str);
-        if $str-style !~~ "" {
-            if $style.defined {
-                $style.append($str-style.split(/\s+/, :skip-empty));
-            } else {
-                $style = Color::String.new(color => $str-style.split(/\s+/, :skip-empty));
+        if Shader.has-color($str) {
+            my $str-style = Shader.extract-style($str);
+            if $str-style !~~ "" {
+                if $style.defined {
+                    $style.append($str-style.split(/\s+/, :skip-empty));
+                } else {
+                    $style = Color::String.new(color => $str-style.split(/\s+/, :skip-empty));
+                }
+                String.new(value => Shader.wipe-style($str), :$style);
             }
-            String.new(value => Shader.wipe-style($str), :$style);
-        }  else {
-            return String.new(value => $str);
         }
+        return String.new(value => $str);
     }
 
     multi method add-cell(Str $str, Color::String $style) {
@@ -154,7 +156,7 @@ class Generator {
         self;
     }
 
-    multi method join(Generator $g, :$preserve-style) {
+    multi method join(Generator $g, :$preserve-style, :$replace-style) {
         if $preserve-style {
             my \last-style = @!style[* - 1];
             last-style.end = self!__last_row_not_empty()
@@ -167,6 +169,12 @@ class Generator {
                 ));
                 @!style[* - 1].end = $style.end + last-style.end + 1 if $style.end.defined;
             }
+        }
+        if $replace-style {
+            if $g.style.[* - 1].beg > $!index {
+                X::Kinoko::Error.new(msg => 'The style-end is bigger than current index.').throw();
+            }
+            @!style = $g.style.clone();
         }
         self.join($g.data);
     }
