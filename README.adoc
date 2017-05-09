@@ -2,6 +2,12 @@
 
 Advanced table generate module for perl6
 
+# Description
+
+Terminal::Table provides a simple and also a advance way generate table output in
+terminals. It support multi line table cell. You can create your own style for your
+table, and you can colour your table content. Also the module has common style pre-defined.
+
 # Usage
 
 ## Example
@@ -70,7 +76,7 @@ $g.generator().generate().print(:color);
 
 ### more
 
-For more usage, check out POD document.
+For more usage, check out sample or POD document.
 
 # Installation
 
