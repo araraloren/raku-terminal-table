@@ -115,7 +115,7 @@ or use class C<Generator> in complex way.
 
 =item @data
 
-    Table data, is a two-dimension array
+    Table data, is a two-dimension array.
 
 =item @max-widths = []
 
@@ -125,6 +125,36 @@ or use class C<Generator> in complex way.
 
     Table style, default is I<ASCII> style.
 
-C<&print-table> is a simple interface to generate a table.
+C<&print-table> generate a table and print it.
+
+=head2 C<array-to-table(@data, @max-widths = [], :$style = Style::Default::ASCII)>
+
+=item @data
+
+    Table data, is a two-dimension array.
+
+=item @max-widths = []
+
+    Maximum width of table column, is I<-1> when not set.
+
+=item :$style = Style::Default::ASCII
+
+    Table style, default is I<ASCII> style.
+
+C<&array-to-table> generate a table for the given data and style.
+
+=head2 C<create-generator(@data, :$style = Style::Default::ASCII)>
+
+=item @data
+
+    Table data, is a two-dimension array.
+
+=item :$style = Style::Default::ASCII
+
+    Table style, default is I<ASCII> style.
+
+C<&create-generator> create a C<Generator> for the given data and style.
+
+=head2 
 
 =end pod
