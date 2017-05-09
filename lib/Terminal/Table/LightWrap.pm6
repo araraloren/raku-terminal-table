@@ -29,7 +29,7 @@ grammar Sentence {
 		  <:Block("Arabic")>
 		| <:Block("Balinese")>
 		| <:Block("Bengali")>
-		| <[a..zA..Z\-]>
+		| <[a..zA..Z]>
 		]+
 	}
 }
