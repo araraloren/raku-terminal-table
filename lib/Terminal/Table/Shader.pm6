@@ -12,6 +12,12 @@ multi method colour(Str $str, $style) {
     return colored($str, $style.color-style());
 }
 
+method has-color(\str) returns Bool {
+    my regex color-seq { \e\[\d+m };
+
+    return str ~~ /<color-seq>/;
+}
+
 method extract-style(Str $str) returns Str {
     my $style = uncolor($str);
     $style ~~ s/\s+reset//;
