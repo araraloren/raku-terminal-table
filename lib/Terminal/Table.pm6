@@ -43,7 +43,7 @@ sub create-generator(@data, :$style = Style::Default::ASCII) is export {
         }
         when Style::Default::DOT {
             Style.new(
-                corner-style => Style::Corner.dot(),
+                corner-style => Style::Corner.single(),
                 line-style => Style::Line.dot(),
                 content-style => Style::Content.space(),
             );
@@ -155,6 +155,6 @@ C<&array-to-table> generate a table for the given data and style.
 
 C<&create-generator> create a C<Generator> for the given data and style.
 
-=head2 
+=head2
 
 =end pod
