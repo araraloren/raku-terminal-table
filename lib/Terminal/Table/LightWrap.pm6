@@ -25,10 +25,12 @@ grammar Sentence {
 	}
 
 	token splited-by-block {
-		<:Block("Arabic")>
+		[
+		  <:Block("Arabic")>
 		| <:Block("Balinese")>
 		| <:Block("Bengali")>
-		| <:Block("Latin")>
+		| <[a..zA..Z\-]>
+		]+
 	}
 }
 
@@ -52,7 +54,6 @@ class Sentence::Actions {
 	}
 
 	method splited-by-block($/) {
-		dd $/;
 		my ($key, $value) = ($/.Str, noexpand-width($/.Str));
 
 		if $!force && ($value > $!max || ($value + $!current > $!max)) {
