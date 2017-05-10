@@ -36,4 +36,4 @@ $g.add-cell('Korean');
 $g.add-cell('안녕하세요！');
 $g.add-cell('Korea');
 $g.end-line;
-$g.generator().generate().print(:color);
+$g.generator().print(:color);
