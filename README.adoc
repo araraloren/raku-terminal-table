@@ -71,7 +71,7 @@ $g.add-cell('Korean');
 $g.add-cell('안녕하세요！');
 $g.add-cell('Korea');
 $g.end-line;
-$g.generator().generate().print(:color);
+$g.generator().print(:color);
 --------------------------
 
 ### more
@@ -90,5 +90,9 @@ cd perl6-terminal-table && zef install .
 # License
 
     The MIT License (MIT).
+
+# Author
+
+    Araraloren. Email: blackcatoverwall@gmail.com
 
 # TODO
