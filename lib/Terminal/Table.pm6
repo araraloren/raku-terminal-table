@@ -155,6 +155,87 @@ C<&array-to-table> generate a table for the given data and style.
 
 C<&create-generator> create a C<Generator> for the given data and style.
 
-=head2
+=head2 class Generator
+
+C<Generator> collect user data and style, then generate a table generator.
+
+=head3 new(Style :$style is copy --> Generator)
+
+Table style for current C<Generator>.
+
+Create a instance of C<Generator> with given style.
+
+=head3 add-cell(Str $str --> Generator)
+
+Create a new cell in C<Generator>, and generate a C<Content> with C<$str>, then put
+it into the cell.
+
+=head3 add-cell(Str $str, Color::String $style --> Generator)
+
+=item  Color::String $style
+
+The style will be apply to the current cell's C<Content>.
+
+Create a new cell in C<Generator>, and generate a C<Content> with C<$str> and C<$style>,
+then put it into the cell.
+
+=head3 add-cell(@lines --> Generator)
+
+=item @lines
+
+A multi line C<String> will be generate with C<@lines>.
+
+Create a new cell, and generate a C<Content> with content C<@lines>, then put it
+into the cell.
+
+=head3 add-cell(@lines, Color::String $style --> Generator)
+
+=item @lines
+
+A multi line C<Content> will be generate with C<@lines>.
+
+=item  Color::String $style
+
+The style will be apply to the all line of C<Content>.
+
+Create a new cell, and generate a C<Content> with C<@lines> and C<$style>,
+then put it into the cell.
+
+=head3 add-cell($maybestr where * !~~ Str --> Generator)
+
+Create a new cell in C<Generator>, and generate a C<Content> with C<$maybestr>,
+then put it into the cell.
+
+=head3 add-cell($maybestr where * !~~ Str, Color::String $style --> Generator)
+
+Create a new cell in C<Generator>, and generate a C<Content> with C<$maybestr>
+and C<$style>, then put it into the cell.
+
+=head3 end-line(--> Generator)
+
+End current line and create a new line.
+
+=head3 from-array(@array --> Generator)
+
+Generate a C<Content> array with C<@array>, then append it into table data.
+
+=head3 from-array(@array, @styles --> Generator)
+
+Generate a C<Content> array with C<@array> and C<@styles>, then append it to
+table data.
+
+=head3 join(Generator $g, :$preserve-style, :$replace-style --> Generator)
+
+Append data of C<$g> to current C<Generator>, the add style of C<$g> to current
+C<Generator> if I<preserve-style> specified, or replace current style with style of
+C<$g> if I<replace-style> specified.
+
+=head3  generator(@max-widths = [] --> Generator::Table)
+
+=item @max-widths = []
+
+    The max width of every column, will be I<-1> when not set.
+
+Return a instance of U<class Generator::Table>.
 
 =end pod
