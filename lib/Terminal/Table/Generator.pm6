@@ -4,7 +4,10 @@ use Terminal::Table::Shader;
 use Terminal::Table::String;
 use Terminal::Table::Style;
 use Terminal::Table::Frame;
+use Terminal::Table::Settings;
 use Terminal::Table::Exception;
+
+my $init-now = INIT now;
 
 class Generator {
     my class ScopeStyle {
@@ -184,6 +187,8 @@ class Generator {
 
         @style[* - 1].end = self!__last_row_not_empty() ?? $!index !! $!index - 1;
 
+        note "{&?ROUTINE}:\t\n{now - $init-now}" if debug();
+
         return my class Generator::Table {
             has @.sc;
             has @.content;
@@ -227,8 +232,8 @@ class Generator {
                         for @(@!sc[$index]) Z, @!h-align -> ($content, $width) {
                             @!content[$index].push(
                                 $content
-                                .align($width - $style.style.content.padding-width, $style.style.content)
-                                .padding($style.style.content)
+                                .align-padding($width - $style.style.content.padding-width, $style.style.content)
+                                #.padding($style.style.content)
                             );
                         }
                     }
@@ -361,10 +366,15 @@ class Generator {
             method generate(@max-widths = []) {
                 self!__reset();
                 self!__gen_max_widths(@max-widths);
+                note "{&?ROUTINE}:\t\n{now - $init-now}" if debug();
                 self!__align_content();
+                note "{&?ROUTINE}:\t\n{now - $init-now}" if debug();
                 self!__gen_max_heights();
+                note "{&?ROUTINE}:\t\n{now - $init-now}" if debug();
                 self!__extend_v_content();
+                note "{&?ROUTINE}:\t\n{now - $init-now}" if debug();
                 self!__gen_frame();
+                note "{&?ROUTINE}:\t\n{now - $init-now}" if debug();
                 self!__gen_frame_visibility();
                 self;
             }

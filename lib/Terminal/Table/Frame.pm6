@@ -198,6 +198,54 @@ class Content {
         self.new-from-string-array-padding(@new-data, @new-padding);
     }
 
+    method align-padding($width, $style) {
+        #- table column max width = <- alinged string ->
+        my $real-width = $width;
+        my @lines = wrap(@!lines, :tabstop(tabstop()), :max-width($real-width), :force($style.split-word));
+        my @new-padding = Array.new;
+        for @lines -> $line {
+            my $padding-width = $real-width - $line.width;
+            unless $padding-width %% $style.padding-char.width {
+                X::Kinoko::Error.new(msg => 'padding width must be divides by padding-char width').throw();
+            }
+            my $padding-count = $padding-width div $style.padding-char.width;
+            @new-padding.push(
+                do {
+                    my Content::Padding $cp .= new;
+                    $cp.pl ~= ($style.padding-char x $style.padding-left);
+                    $cp.wl += ($style.padding-char.width * $style.padding-left);
+                    if $style.align-middle {
+                        my $padding = $style.padding-char x ($padding-count div 2);
+                        $cp.pl ~= $padding;
+                        $cp.wl += ($style.padding-char.width * ($padding-count div 2));
+                        $cp.pr ~= $padding;
+                        $cp.wr += ($style.padding-char.width * ($padding-count div 2));
+                        $cp.pr ~= ($padding-count %% 2 ?? "" !! $style.padding-char);
+                        $cp.wr += ($padding-count %% 2 ?? 0 !! $style.padding-char.width);
+                    } elsif $style.align-left {
+                        my $padding = $style.padding-char x $padding-count;
+                        $cp.pr ~= $padding;
+                        $cp.wr += ($style.padding-char.width * $padding-count);
+                    } elsif $style.align-right {
+                        my $padding = $style.padding-char x $padding-count;
+                        $cp.pl ~= $padding;
+                        $cp.wl += ($style.padding-char.width * $padding-count);
+                    } else {
+                        X::Kinoko::Error.new(msg => 'Can not recognize align type!').throw();
+                    }
+                    $cp.pr = $cp.pr ~ ($style.padding-char x $style.padding-right);
+                    $cp.wr = $cp.wr + ($style.padding-char.width * $style.padding-right);
+                    $cp;
+                }
+            )
+        }
+        # style will apply to corresponding line, extra Str will use the last style
+        for ^+@lines -> $i {
+            @lines[$i].set-style($i < +@!lines ?? @!lines[$i].style !! @!lines[* - 1].style);
+        }
+        self.new-from-string-array-padding(@lines, @new-padding);
+    }
+
     method padding($style) {
         my @new-padding = Array.new;
         for @!padding -> $p {
