@@ -96,3 +96,5 @@ cd perl6-terminal-table && zef install .
     Araraloren. Email: blackcatoverwall@gmail.com
 
 # TODO
+
+    Refactor table generate code.
