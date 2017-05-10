@@ -12,6 +12,7 @@ enum Style::Default <<
 	:SINGLE('single')
 	:DOUBLE('double')
 	:ROUND('round')
+	:OTHER('other')
 >>;
 
 class Style::Corner {
