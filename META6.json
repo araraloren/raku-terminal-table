@@ -7,18 +7,18 @@
     "depends"     : [
         "Terminal::ANSIColor",
         "Terminal::WCWidth",
-        "Text::Tabs",
+        "Text::Tabs"
     ],
     "provides"    : {
-        "Terminal::Table"				    : "lib/Terminal/Table.pm6",
-        "Terminal::Table::String.pm6"       : "lib/Terminal/Table/String.pm6",
-        "Terminal::Table::Style.pm6"        : "lib/Terminal/Table/Style.pm6",
-        "Terminal::Table::Shader.pm6"       : "lib/Terminal/Table/Shader.pm6",
-        "Terminal::Table::Settings.pm6"     : "lib/Terminal/Table/Settings.pm6",
-        "Terminal::Table::Frame.pm6"        : "lib/Terminal/Table/Frame.pm6",
-        "Terminal::Table::LightWrap.pm6"    : "lib/Terminal/Table/LightWrap.pm6",
-        "Terminal::Table::Generator.pm6"    : "lib/Terminal/Table/Generator.pm6",
-        "Terminal::Table::Exception.pm6"    : "lib/Terminal/Table/Exception.pm6",
+        "Terminal::Table"			    : "lib/Terminal/Table.pm6",
+        "Terminal::Table::String"       : "lib/Terminal/Table/String.pm6",
+        "Terminal::Table::Style"        : "lib/Terminal/Table/Style.pm6",
+        "Terminal::Table::Shader"       : "lib/Terminal/Table/Shader.pm6",
+        "Terminal::Table::Settings"     : "lib/Terminal/Table/Settings.pm6",
+        "Terminal::Table::Frame"        : "lib/Terminal/Table/Frame.pm6",
+        "Terminal::Table::LightWrap"    : "lib/Terminal/Table/LightWrap.pm6",
+        "Terminal::Table::Generator"    : "lib/Terminal/Table/Generator.pm6",
+        "Terminal::Table::Exception"    : "lib/Terminal/Table/Exception.pm6"
     },
 	"auth" : "github:araraloren",
     "authors" : "Loren",
