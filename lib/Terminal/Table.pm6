@@ -71,14 +71,12 @@ sub create-generator(@data, :$style = Style::Default::ASCII) is export {
 sub print-table(@data, @max-widths = [], :$style = Style::Default::ASCII) is export {
     my $generator = create-generator(@data, :$style);
 
-    $generator.generate(@max-widths);
     $generator.print(:color);
 }
 
 sub array-to-table(@data, @max-widths = [], :$style = Style::Default::ASCII) is export {
     my $generator = create-generator(@data, :$style);
 
-    $generator.generate(@max-widths);
     $generator.to-array(:color);
 }
 
