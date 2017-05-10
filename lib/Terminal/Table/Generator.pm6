@@ -144,7 +144,7 @@ class Generator {
         @!data[$!index].defined && @!data[$!index].elems > 0;
     }
 
-    multi method join(@array) {
+    method !__join(@array) {
         self.end-line() if self!__last_row_not_empty();
 
         for @array -> $inner-array {
@@ -156,7 +156,7 @@ class Generator {
         self;
     }
 
-    multi method join(Generator $g, :$preserve-style, :$replace-style) {
+    method join(Generator $g, :$preserve-style, :$replace-style) {
         if $preserve-style {
             my \last-style = @!style[* - 1];
             last-style.end = self!__last_row_not_empty()
@@ -176,7 +176,7 @@ class Generator {
             }
             @!style = $g.style.clone();
         }
-        self.join($g.data);
+        self!__join($g.data);
     }
 
     method generator(@max-widths = []) {
@@ -184,7 +184,7 @@ class Generator {
 
         @style[* - 1].end = self!__last_row_not_empty() ?? $!index !! $!index - 1;
 
-        return my class :: {
+        return my class Generator::Table {
             has @.sc;
             has @.content;
             has @.frame;
