@@ -9,11 +9,20 @@ use Terminal::Table::Exception;
 
 my $init-now = INIT now;
 
+class Generator::StyleCache { ... };
+
 class Generator {
     my class ScopeStyle {
         has Int $.beg is rw;
         has Int $.end is rw;
         has     $.style;
+        has     $.cache;
+
+        submethod TWEAK(:$style) {
+            $!cache = Generator::StyleCache.new(
+                style => $style
+            );
+        }
     }
 
     has @.data;
@@ -182,7 +191,7 @@ class Generator {
         self!__join($g.data);
     }
 
-    method generator(@max-widths = []) {
+    method generator(@max-widths = [], :$callback = Block) {
         my @style = @!style.clone();
 
         @style[* - 1].end = self!__last_row_not_empty() ?? $!index !! $!index - 1;
@@ -197,23 +206,25 @@ class Generator {
             has @.h-frame-visibility;
             has @.style;
             has @.iterator;
-            has @.h-align;
+            has @.max-widths;
             has @.max-heights;
+            has @.style-caches;
             has $.index = 0;
+            has &.callback is rw;
 
-            method new(@sc, @style) {
-                self.bless(:@sc, :@style);
+            method new(@sc, @style, :$callback) {
+                self.bless(:@sc, :@style, :$callback);
             }
 
             method !__gen_max_widths(@max-widths) {
-                @!h-align = 0 xx [ .elems for @!sc ].max;
-                for @!sc -> \ref {
-                    # calc max width of per-col in simple way
-                    for ^ref.elems -> $i {
-                        if @max-widths[$i].defined && @max-widths[$i] != -1 {
-                            @!h-align[$i] = @max-widths[$i];
-                        } else {
-                            @!h-align[$i] = ref[$i].max-width if ref[$i].max-width > @!h-align[$i];
+                @!max-widths = 0 xx [ .elems for @!sc ].max;
+                @!max-widths[0 .. +@max-widths - 1] = @max-widths if +@max-widths > 0;
+                for @!sc -> $line {
+                    for ^$line.elems -> $index {
+                        unless @max-widths[$index].defined && @max-widths[$index] != -1 {
+                            if $line.[$index].max-width > @!max-widths[$index] {
+                                @!max-widths[$index] = $line.[$index].max-width;
+                            }
                         }
                     }
                 }
@@ -222,69 +233,62 @@ class Generator {
                     $align = $style.style.content.padding-width
                         if $align < $style.style.content.padding-width;
                 }
-                @!h-align = @!h-align.map: { $_ + $align };
+                @!max-widths = @!max-widths.map: { $_ + $align };
             }
 
-            method !__align_content() {
-                for @!style -> $style {
-                    for $style.beg .. $style.end -> $index {
-                        # align content and store it into @!content
-                        for @(@!sc[$index]) Z, @!h-align -> ($content, $width) {
-                            @!content[$index].push(
-                                $content
-                                .align-padding($width - $style.style.content.padding-width, $style.style.content)
-                                #.padding($style.style.content)
-                            );
-                        }
-                    }
-                }
-            }
-
-            method !__gen_max_heights() {
-                @!max-heights = [];
-                for @!content {
-                    # calc max height of per-line in simple way
-                    @!max-heights.push(max([ .height for @$_ ]));
-                }
-            }
-
-            method !__extend_v_content() {
-                for @!content Z, @!max-heights <-> ($cref, $h) {
-                    for @$cref <-> $c {
-                        $c = $c.extend-v($h) if $c.height < $h;
-                    }
+            method !__gen_one_line($style, $index) {
+                return lazy gather for @(@!sc[$index]) Z, @!max-widths -> ($content, $width) {
+                    take $content.align-padding(
+                        $width - $style.content.padding-width,
+                        $style.content
+                    );
                 }
             }
 
             method !__gen_frame() {
-                for @!style -> $style {
-                    my \sref = $style.style;
-                    next if sref.line.is-none();
-                    for $style.beg .. $style.end -> $index {
-                        self!__gen_iterator();
-                        my \cref = @(@!content[$index]);
-                        my \href = @!max-heights[$index];
-                        for ^+cref -> $col {
-                            self!__add_cell(
-                                href,
-                                @!h-align[$col],
-                                sref,
-                                $index == 0 ??
-                                    sref.line.top !!
-                                    sref.line.h-middle,
-                                ($index == 0 || $col >= @!content[$index - 1].elems) ??
-                                    sref.corner.top.middle !!
-                                    sref.corner.middle.middle
+                for @!style -> $scope-style {
+                    for $scope-style.beg .. $scope-style.end -> $index {
+                        my $style := $scope-style.style;
+                        my @oneline = self!__gen_one_line($style, $index);
+
+                        if $style.line.is-none() {
+                            @!content[$index].append(@oneline);
+                            next;
+                        } else {
+                            self!__gen_iterator();
+                            my $cache  = $scope-style.cache;
+                            my $height = max([ .height for @oneline ]);
+
+                            @!max-heights.push($height);
+                            for @oneline -> $content {
+                                @!content[$index].push(
+                                    $content.height < $height ??
+                                    $content.extend-v($height) !!
+                                    $content
+                                );
+                            }
+                            for 0 ..^ +@!content[$index] -> $cindex {
+                                my \hline  = $cache.hline($cindex, @!max-widths[$cindex]);
+                                my \corner = $cache.corner();
+                                self!__add_cell(
+                                    $cache.vline($index, $height).middle(),
+                                    $index == 0 ?? hline.top() !! hline.middle(),
+                                    ($index == 0 || $cindex >= @!content[$index - 1].elems) ??
+                                        corner.top().middle() !! corner.middle().middle()
+                                );
+                            }
+                            my $last-minus-current = $index <= 0 ?? -1 !!
+                                @!content[$index - 1].elems - @!content[$index].elems;
+                            self!__end_line(
+                                $height, @!max-widths, @!content[$index].elems,
+                                $cache, $index, $last-minus-current
                             );
+                            self!__incrment_index();
                         }
-                        my $last-more-than-current = $index <= 0 ?? -1 !!
-                            @!content[$index - 1].elems - cref.elems;
-                        self!__end_line(href,  @!h-align[cref.elems .. *], sref, $index, $last-more-than-current);
-                        self!__incrment_index();
                     }
                 }
                 unless @!style[* - 1].style.line.is-none() {
-                    self!__insert_last_line(@!h-align, @!style[* - 1].style, +@!content[* - 1]);
+                    self!__insert_last_line(@!max-widths, @!style[* - 1].cache, +@!content[* - 1]);
                 }
             }
 
@@ -295,53 +299,55 @@ class Generator {
                 @!iterator[1] := @!frame[$!index + 1];
             }
 
-            method !__add_cell($h, $w, Style $style, $up, $corner) {
-                @!iterator[1].push($style.line.v-middle.extend-to($h, :v));
-                @!iterator[0].push($up.extend-to($w));
-                @!iterator[0].push($corner.clone());
+            method !__add_cell($vline, $hline, $corner) {
+                @!iterator[1].push($vline);
+                @!iterator[0].push($hline);
+                @!iterator[0].push($corner);
             }
 
             method !__incrment_index() {
                 $!index += 2;
             }
 
-            method !__end_line($h, @w, Style $style, $index, $count) {
+            method !__end_line($height, @max-widths, $elems, $cache, $index, $spare) {
+                my \corner = $cache.corner();
+                my \vline  = $cache.vline($index, $height);
+
                 @!iterator[0].unshift(
-                    $index == 0 ?? $style.corner.top.left.clone() !!
-                        $style.corner.middle.left.clone()
+                    $index == 0 ?? corner.top().left() !! corner.middle().left()
                 );
-                @!iterator[1].unshift($style.line.left.extend-to($h, :v));
-                if $count > -1 {
-                    @!iterator[0][* - 1] = $style.corner.middle.middle.clone()
-                        if $count > 0;
-                    for ^$count {
+                @!iterator[1].unshift(vline.left());
+                if $spare > -1 {
+                    @!iterator[0][* - 1] = corner.middle().middle()
+                        if $spare > 0;
+                    for ^$spare {
                         @!iterator[0].append(
-                            $style.line.h-middle.extend-to(@w[$_]),
-                            $style.corner.bottom.middle.clone()
+                            $cache.hline($elems + $_, @max-widths[$_ + $elems]).middle(),
+                            corner.bottom().middle()
                         );
                     }
-                    if $count == 0 {
-                        @!iterator[0][* - 1] = $style.corner.middle.right.clone();
+                    if $spare == 0 {
+                        @!iterator[0][* - 1] = corner.middle().right();
                     } else {
-                        @!iterator[0][* - 1] = $style.corner.bottom.right.clone();
+                        @!iterator[0][* - 1] = corner.bottom().right();
                     }
                 } else {
-                    @!iterator[0][* - 1] = $style.corner.top.right.clone();
+                    @!iterator[0][* - 1] = corner.top().right();
                 }
-                @!iterator[1][* - 1] = $style.line.right.extend-to($h, :v);
+                @!iterator[1][* - 1] = vline.right();
             }
 
-            method !__insert_last_line(@w, Style $style, $count) {
+            method !__insert_last_line(@max-widths, $cache, $spare) {
                 my $last-index = $!index;
                 @!frame[$last-index] = Array.new;
-                @!frame[$last-index].push($style.corner.bottom.left.clone());
-                for ^$count {
+                @!frame[$last-index].push($cache.corner().bottom().left());
+                for ^$spare {
                     @!frame[$last-index].append(
-                        $style.line.bottom.extend-to(@w[$_]),
-                        $style.corner.bottom.middle.clone()
+                        $cache.hline($_, @max-widths[$_]).bottom(),
+                        $cache.corner().bottom().middle()
                     );
                 }
-                @!frame[$last-index][* - 1] = $style.corner.bottom.right.clone();
+                @!frame[$last-index][* - 1] = $cache.corner().bottom().right();
             }
 
             method !__gen_frame_visibility() {
@@ -352,13 +358,13 @@ class Generator {
 
             method !__reset() {
                 if $!index > 0 {
-                    @!content = [];
-                    @!frame = [];
-                    @!v-frame-visibility = [];
-                    @!h-frame-visibility = [];
-                    @!iterator = [];
-                    @!h-align = [];
-                    @!max-heights = [];
+                    @!content = Array.new;
+                    @!frame = Array.new;
+                    @!v-frame-visibility = Array.new;
+                    @!h-frame-visibility = Array.new;
+                    @!iterator = Array.new;;
+                    @!max-widths = Array.new;
+                    @!max-heights = Array.new;
                     $!index = 0;
                 }
             }
@@ -366,12 +372,6 @@ class Generator {
             method generate(@max-widths = []) {
                 self!__reset();
                 self!__gen_max_widths(@max-widths);
-                note "{&?ROUTINE}:\t\n{now - $init-now}" if debug();
-                self!__align_content();
-                note "{&?ROUTINE}:\t\n{now - $init-now}" if debug();
-                self!__gen_max_heights();
-                note "{&?ROUTINE}:\t\n{now - $init-now}" if debug();
-                self!__extend_v_content();
                 note "{&?ROUTINE}:\t\n{now - $init-now}" if debug();
                 self!__gen_frame();
                 note "{&?ROUTINE}:\t\n{now - $init-now}" if debug();
@@ -543,10 +543,152 @@ class Generator {
                     }
                 }
             }
-        }.new(@!data.clone(), @style).generate(@max-widths);
+        }.new(@!data.clone(), @style, :$callback).generate(@max-widths);
     }
 
     method perl() {
         self.defined ?? "Generator.new(style => {@!style[0].style.pelr})" !! "(Generator)";
+    }
+}
+
+class Generator::StyleCache {
+    has $.style;
+    has @!hline = Array.new;
+    has @!vline = Array.new;
+    has $!corner;
+
+    method hline(Int $col, Int $width) {
+        return @!hline[$col] || do {
+            @!hline[$col] = class :: {
+                has $.style;
+                has $.width;
+                has $!top;
+                has $!middle;
+                has $!bottom;
+
+                method top() {
+                    return $!top || do {
+                        $!top = $!style.line.top.extend-to($!width);
+                        $!top;
+                    }
+                }
+
+                method middle() {
+                    return $!middle || do {
+                        $!middle = $!style.line.h-middle.extend-to($!width);
+                        $!middle;
+                    }
+                }
+
+                method bottom() {
+                    return $!bottom || do {
+                        $!bottom = $!style.line.bottom.extend-to($!width);
+                        $!bottom;
+                    }
+                }
+            }.new(:$!style, :$width);
+            @!hline[$col];
+        }
+    }
+
+    method vline(Int $row, Int $height) {
+        return @!vline[$row] || do {
+            @!vline[$row] = class :: {
+                has $.style;
+                has $.height;
+                has $!left;
+                has $!middle;
+                has $!right;
+
+                method left() {
+                    return $!left || do {
+                        $!left = $!style.line.left.extend-to($!height, :v);
+                        $!left;
+                    }
+                }
+
+                method middle() {
+                    return $!middle || do {
+                        $!middle = $!style.line.v-middle.extend-to($!height, :v);
+                        $!middle;
+                    }
+                }
+
+                method right() {
+                    return $!right || do {
+                        $!right = $!style.line.right.extend-to($!height, :v);
+                        $!right;
+                    }
+                }
+            }.new(:$!style, :$height);
+            @!vline[$row];
+        }
+    }
+
+    method corner() {
+        return $!corner || do {
+            my class LineCache {
+                has $.style;
+                has @.array = Array.new;
+
+                method new(:$style) {
+                    self.bless(:$style);
+                }
+
+                method left {
+                    @!array[0] || do {
+                        @!array[0] = $!style.left.clone();
+                        @!array[0];
+                    };
+                }
+
+                method middle {
+                    @!array[1] || do {
+                        @!array[1] = $!style.middle.clone();
+                        @!array[1];
+                    };
+                }
+
+                method right {
+                    @!array[2] || do {
+                        @!array[2] = $!style.right.clone();
+                        @!array[2];
+                    };
+                }
+            }
+
+            $!corner = class :: {
+                has $.style;
+                has @.corner = Array.new;
+
+                method top() {
+                    return @!corner[0] || do {
+                        @!corner[0] = LineCache.new(
+                            style => $!style.corner.top
+                        );
+                        @!corner[0]
+                    }
+                }
+
+                method middle() {
+                    return @!corner[1] || do {
+                        @!corner[1] = LineCache.new(
+                            style => $!style.corner.middle
+                        );
+                        @!corner[1]
+                    }
+                }
+
+                method bottom() {
+                    return @!corner[2] || do {
+                        @!corner[2] = LineCache.new(
+                            style => $!style.corner.bottom
+                        );
+                        @!corner[2]
+                    }
+                }
+            }.new(:$!style);
+            $!corner;
+        }
     }
 }
