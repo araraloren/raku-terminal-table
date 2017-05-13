@@ -1,6 +1,9 @@
 # Terminal-Table
+:toc-title: contents
 
 Advanced table generate module for perl6
+
+image:https://travis-ci.org/araraloren/perl6-terminal-table.svg?branch=master["Build Status", link="https://travis-ci.org/araraloren/perl6-terminal-table"]
 
 # Description
 
