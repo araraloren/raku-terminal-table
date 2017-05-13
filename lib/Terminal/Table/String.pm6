@@ -52,7 +52,7 @@ class String is Str {
         }
     }
 
-    method colored() {
+    method coloured() {
         $!style && $!style.enabled;
     }
 
@@ -69,7 +69,7 @@ class String is Str {
     }
 
     method uncolor() {
-        if self.colored() {
+        if self.coloured() {
             $!style.disable();
         }
         return True;
