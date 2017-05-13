@@ -24,7 +24,7 @@ lives-ok {
     $gen.generate();
     $gen.colour(1, 1, Color::String.new(color => <red>));
     $gen.colour(1, 5, Color::String.new(color => <blue underline>));
-    $gen.print(:color);
+    $gen.print(:coloured);
 };
 
 lives-ok {
@@ -45,7 +45,7 @@ lives-ok {
     $gen.generate();
     $gen.colour(1, 5, Color::String.new(color => <green>));
     $gen.colour(1, 1, Color::String.new(color => <blue underline>));
-    $gen.print(:color);
+    $gen.print(:coloured);
 };
 
 done-testing;

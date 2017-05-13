@@ -41,20 +41,25 @@ my regex github {
     '<a href="'<-[\"]>+'"'\s+'>' $<name> = (<-[\<\s]>+)\s*'</a>'
 }
 
+my $linkstyle = Color::String.new(color => <green underline>);
+my $namestyle = Color::String.new(color => <blue bold>);
+
 for @($c ~~ m:g/<github>/) {
     $g.add-cell(++$);
-    $g.add-cell(.<github>.<name>);
-    $g.add-cell(.<github>.<link>);
+    $g.add-cell(.<github>.<name>, $linkstyle);
+    $g.add-cell(.<github>.<link>, $namestyle);
     $g.end-line;
 }
 
 my $tg = $g.generator();
 
-my $linkstyle = Color::String.new(color => <green underline>);
-my $namestyle = Color::String.new(color => <blue bold>);
+$tg.set-callback(sub (|c) {
+    my @lazy-array = &visitor-helper().generate(|c); # call same name help func
 
-for ^$tg.row-count {
-    $tg.colour($_, 1, $namestyle);
-    $tg.colour($_, 2, $linkstyle);
-}
-$tg.print(:color);
+    for @lazy-array -> $line {
+        .print for @($line);
+        "".say;
+    }
+});
+
+$tg.generate(:coloured);

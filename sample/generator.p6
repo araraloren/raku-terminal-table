@@ -35,8 +35,8 @@ for reverse 1 .. 9 -> \x {
 $gr.from-array(@data);
 $gl.join($gr, :replace-style);
 
-my $g = $gl.generator();
+my $g = $gl.generator().generate();
 
 $g.colour(8, $_, Color::String.new(color => <red bold> )) for ^9;
 $g.colour(9, $_, Color::String.new(color => <green bold> )) for ^9;
-$g.print(:color);
+$g.print(:coloured);

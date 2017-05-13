@@ -22,9 +22,9 @@
     },
 	"auth" : "github:araraloren",
     "authors" : "Loren",
-    "source-url"  : "git://github.com/araraloren/perl6-terminal-table.git",
+    "source-url"  : "https://github.com/araraloren/perl6-terminal-table/archive/v0.0.1.zip",
     "support" : {
         "bugtracker" : "https://github.com.araraloren/perl6-terminal-table/issues",
-        "source" : "git://github.com/araraloren/perl6-terminal-table.git"
+        "source" : "https://github.com/araraloren/perl6-terminal-table/tree/v0.0.1"
     }
 }

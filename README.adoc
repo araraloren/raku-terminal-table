@@ -71,7 +71,7 @@ $g.add-cell('Korean');
 $g.add-cell('안녕하세요！');
 $g.add-cell('Korea');
 $g.end-line;
-$g.generator().print(:color);
+$g.generator().generate().print(:coloured);
 --------------------------
 
 ### more
@@ -80,12 +80,17 @@ For more usage, check out sample or POD document.
 
 # Installation
 
+## From source
 [source, shell]
 --------------------------
 git clone https://github.com/araraloren/perl6-terminal-table
 
-cd perl6-terminal-table && zef install .
+cd perl6-terminal-table && git checkout v0.0.1 && zef install .
 --------------------------
+
+## From zef
+
+zef update && zef install Terminal::Table
 
 # License
 
@@ -97,4 +102,4 @@ cd perl6-terminal-table && zef install .
 
 # TODO
 
-    Refactor table generate code.
+    None

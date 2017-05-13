@@ -71,13 +71,13 @@ sub create-generator(@data, :$style = Style::Default::ASCII) is export {
 sub print-table(@data, @max-widths = [], :$style = Style::Default::ASCII) is export {
     my $generator = create-generator(@data, :$style);
 
-    $generator.print(:color);
+    $generator.generate.print(:coloured);
 }
 
 sub array-to-table(@data, @max-widths = [], :$style = Style::Default::ASCII) is export {
     my $generator = create-generator(@data, :$style);
 
-    $generator.to-array(:color);
+    $generator.generate.to-array(:coloured);
 }
 
 
@@ -109,7 +109,11 @@ Terminal::Table can generate ascii table or unicode table output
 in terminals. It can be simple use high level interface C<&print-table>,
 or use class C<Generator> in complex way.
 
-=head2 C<print-table(@data, @max-widths = [], :$style = Style::Default::ASCII)>
+=head2 tabstop() returns Int is export is rw
+
+Setting tab width, default is 8.
+
+=head2 print-table(@data, @max-widths = [], :$style = Style::Default::ASCII)
 
 =item @data
 
@@ -125,7 +129,7 @@ or use class C<Generator> in complex way.
 
 C<&print-table> generate a table and print it.
 
-=head2 C<array-to-table(@data, @max-widths = [], :$style = Style::Default::ASCII)>
+=head2 array-to-table(@data, @max-widths = [], :$style = Style::Default::ASCII)
 
 =item @data
 
@@ -141,7 +145,7 @@ C<&print-table> generate a table and print it.
 
 C<&array-to-table> generate a table for the given data and style.
 
-=head2 C<create-generator(@data, :$style = Style::Default::ASCII)>
+=head2 create-generator(@data, :$style = Style::Default::ASCII)
 
 =item @data
 
@@ -152,6 +156,11 @@ C<&array-to-table> generate a table for the given data and style.
     Table style, default is I<ASCII> style.
 
 C<&create-generator> create a C<Generator> for the given data and style.
+
+=head2 visitor-helper(--> Generator::VisitorHelper)
+
+Return a global instance of C<Generator::VisitorHelper>, it has some helper method
+for visit table data.
 
 =head2 class Generator
 
@@ -228,12 +237,110 @@ Append data of C<$g> to current C<Generator>, the add style of C<$g> to current
 C<Generator> if I<preserve-style> specified, or replace current style with style of
 C<$g> if I<replace-style> specified.
 
-=head3  generator(@max-widths = [] --> Generator::Table)
+=head3  generator(:&callback --> Generator::Table)
+
+=item :&callback
+
+    It will pass to C<set-callback> of C<Generator::Table>.
+
+Return a instance of U<class Generator::Table>.
+
+=head2 class Generator::Table
+
+The real table generator, it copyed data and style from C<Generator>. It has a
+C<@content> array store table content data, and a C<@frame> store table frame data.
+One line of C<@content> corresponding two line in C<@frame>.
+
+=head3 generate(@max-widths = [], :$coloured --> Generator::Table)
 
 =item @max-widths = []
 
     The max width of every column, will be I<-1> when not set.
 
-Return a instance of U<class Generator::Table>.
+=item :$coloured
+
+    When C<$coloured> is True, it'll colored string outputed.
+
+Generate table data, it'll call C<&callback> setted through C<set-callback>.
+
+=head3 set-callback(&callback --> Generator::Table)
+
+=item &callback #`(:(@hframe, @vframe, @content, Bool $coloured))
+
+    Will call in generate process, it will pass first horizonal-frame line、second
+    vertical-frame line, and content data, also coloured for style generate. The
+    C<@v-frame> and C<@@content> will empty when last line passed. You should call
+    help method in C<&visitor-helper> when use this callback. Please refer
+    L<sample/self-defined-style.p6> for sample.
+
+Set callback for C<Generator::Table::generate>.
+
+=head3 clear-callback( --> Generator::Table)
+
+Clear callback.
+
+=head3 row-count( --> Int)
+
+Return row count of current table content data.
+
+=head3 max-col-count( --> Int )
+
+Return the maximum column count of table content data.
+
+=head3 col-count( Int $index --> Int )
+
+Return the column count of table content data in C<$index> line.
+
+=head3 colour(Int $x, Int $y, Color::String $style, Int $row = 0 --> Generator::Table)
+
+Set color style for C<$row> line of cell at coord (I<$x>, I<$y>) base on (zero, zero).
+
+=head3 colour(Int $x, Int $y, Color::String $style --> Generator::Table)
+
+Set color style for all line of cell at coord (I<$x>, I<$y>) base on (zero, zero).
+
+=head3 hide(Int $index, :$v --> Generator::Table)
+
+Hide one horizonal-frame line or vertical-frame line at C<$index>.
+
+=head3 unhide(Int $index, :$v --> Generator::Table)
+
+Unhide one horizonal-frame line or vertical-frame line at C<$index>.
+
+=head3 to-array(Bool :$coloured = False, :$helper = &visitor-helper() --> Array)
+
+Travel the table, return a array contains frame and content.
+
+=head3 print(Bool :$coloured = False, :$helper = &visitor-helper())
+
+Print the table.
+
+=head3 visit-all(Bool $coloured = True, :&h-frame, :&v-frame)
+
+=begin code
+
+# ...
+$foo.generate();
+my &h-frame = sub (|c) {
+    .print for @(&visitor-helper().h-frame(|c));
+    "".say;
+};
+my &v-frame = sub (|c) {
+    for @(&visitor-helper().v-frame(|c)) -> $line {
+        .print for @($line);
+        "".say;
+    }
+};
+$foo.visit-all(:&h-frame, :&v-frame, True);
+
+=end code
+
+Ignore the visibility of frame, visit all data in table.
+
+=head3 visit(Bool $coloured = True, :&h-frame, :&v-frame)
+
+Visit the table data, call C<&h-frame> when access horizonal-frame line, and C<&v-frame>
+
+for horizonal-frame line and content.
 
 =end pod
