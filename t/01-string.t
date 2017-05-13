@@ -15,10 +15,10 @@ is($str, $string);
 
 is($string.width, expand-width($str, tabstop()));
 
-ok($string.colored(), "String can have color style.");
+ok($string.coloured(), "String can have color style.");
 
 $string.uncolor();
-nok($string.colored(), "Disable color style.");
+nok($string.coloured(), "Disable color style.");
 
 $string.color();
-ok($string.colored(), "Enable color style.");
+ok($string.coloured(), "Enable color style.");
