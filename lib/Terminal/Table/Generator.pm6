@@ -391,9 +391,16 @@ class Generator::Table {
             for $scope-style.beg .. $scope-style.end -> $index {
                 my $style := $scope-style.style;
                 my @oneline = self!__gen_one_line($style, $index);
+                my $height = max([ .height for @oneline ]);
 
+                @!max-heights.push($height);
+                for @oneline -> $content {
+                    @!content[$index].push(
+                        $content.height < $height ??
+                        $content.extend-v($height) !! $content
+                    );
+                }
                 if $style.line.is-none() {
-                    @!content[$index].append(@oneline);
                     &!callback(
                         [],
                         [],
@@ -404,15 +411,7 @@ class Generator::Table {
                 }
                 self!__gen_iterator();
                 my $cache  = $scope-style.cache;
-                my $height = max([ .height for @oneline ]);
 
-                @!max-heights.push($height);
-                for @oneline -> $content {
-                    @!content[$index].push(
-                        $content.height < $height ??
-                        $content.extend-v($height) !! $content
-                    );
-                }
                 for 0 ..^ +@!content[$index] -> $cindex {
                     my \hline  = $cache.hline($cindex, @!max-widths[$cindex]);
                     my \corner = $cache.corner();
@@ -657,44 +656,42 @@ class Generator::Table {
     method visit-all(Bool $coloured = True, :&h-frame, :&v-frame) {
         for @!style -> $style {
             for $style.beg .. $style.end -> $index {
-                my $findex = $index * 2;
-                if !$style.style.line.is-none() && ?&h-frame {
-                    &h-frame(@!frame[$findex], $coloured);
-                }
-                if ?&v-frame {
-                    if $style.style.line.is-none() {
-                        &v-frame([], @!content[$index], $coloured);
-                    } else {
+                if $style.style.line.is-none() {
+                    &v-frame([], @!content[$index], $coloured);
+                } else {
+                    my $findex = $index * 2;
+                    if ?&h-frame {
+                        &h-frame(@!frame[$findex], $coloured);
+                    }
+                    if ?&v-frame {
                         &v-frame(@!frame[$findex + 1], @!content[$index], $coloured);
                     }
                 }
             }
         }
-        if ?&v-frame {
-            unless @!style[* - 1].style.line.is-none() {
-                &h-frame(@!frame[* - 1], $coloured);
-            }
+        if ?&h-frame && !@!style[* - 1].style.line.is-none() {
+            &h-frame(@!frame[* - 1], $coloured);
         }
     }
 
     method visit(Bool $coloured = True, :&h-frame, :&v-frame) {
         for @!style -> $style {
             for $style.beg .. $style.end -> $index {
-                my $findex = $index * 2;
-                if !$style.style.line.is-none() && @!h-frame-visibility[$findex] && ?&h-frame {
-                    &h-frame(@!frame[$findex], @!v-frame-visibility, $coloured);
-                }
-                if @!h-frame-visibility[$findex + 1] && ?&v-frame {
-                    if $style.style.line.is-none() {
-                        &v-frame([], @!content[$index], [], $coloured);
-                    } else {
+                if $style.style.line.is-none() {
+                    &v-frame([], @!content[$index], [], $coloured);
+                } else {
+                    my $findex = $index * 2;
+                    if @!h-frame-visibility[$findex] && ?&h-frame {
+                        &h-frame(@!frame[$findex], @!v-frame-visibility, $coloured);
+                    }
+                    if @!h-frame-visibility[$findex + 1] && ?&v-frame {
                         &v-frame(@!frame[$findex + 1], @!content[$index], @!v-frame-visibility, $coloured);
                     }
                 }
             }
         }
-        if @!h-frame-visibility[* - 1] && ?&v-frame {
-            unless @!style[* - 1].style.line.is-none() {
+        unless @!style[* - 1].style.line.is-none() {
+            if @!h-frame-visibility[* - 1] && ?&h-frame {
                 &h-frame(@!frame[* - 1], @!v-frame-visibility, $coloured);
             }
         }
