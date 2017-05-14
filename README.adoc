@@ -32,6 +32,10 @@ my @data = [
 print-table(@data);
 --------------------------
 
+It will output:
+
+image:resources/output1.png[output for high-level-api]
+
 ### Low Level Interface
 
 [source, perl6]
@@ -74,8 +78,69 @@ $g.add-cell('Korean');
 $g.add-cell('안녕하세요！');
 $g.add-cell('Korea');
 $g.end-line;
-$g.generator().generate().print(:coloured);
+$g.generator().generate().print();
 --------------------------
+
+It will output:
+
+image:resources/output2.png[output for low-level-api]
+
+
+
+### Generator join and colour
+
+Terminal::Table use https://github.com/tadzik/Terminal-ANSIColor[Terminal::ANSIColor] for colour process.
+
+[source, perl6]
+--------------------------
+#!/usr/bin/env perl6
+
+use Terminal::Table::Style;
+use Terminal::Table::Generator;
+
+my $gl = Generator.new(
+    style => Style.new(
+        corner-style => Style::Corner.double(),
+        line-style   => Style::Line.double(),
+        content-style=> Style::Content.space(),
+    )
+);
+
+for 1 .. 9 -> \x {
+    for 1 .. x -> \y {
+        $gl.add-cell("{y} x {x} = {x * y}");
+    }
+    $gl.end-line();
+}
+
+my $gr = Generator.new(
+    style => Style.new(
+        corner-style => Style::Corner.single(),
+        line-style   => Style::Line.dot(),
+        content-style=> Style::Content.space(),
+    )
+);
+
+my @data;
+
+for reverse 1 .. 9 -> \x {
+    @data.push([ "{.Int} x {x} = {x * .Int}" for 1 .. x ]);
+}
+
+$gr.from-array(@data);
+$gl.join($gr, :replace-style);
+
+my $g = $gl.generator().generate();
+
+$g.colour(0, 0, Color::String.new(color => <blue bold> ));
+$g.colour(8, $_, Color::String.new(color => <red bold> )) for ^9;
+$g.colour(9, $_, Color::String.new(color => <green bold> )) for ^9;
+$g.print(:coloured);
+--------------------------
+
+It will output:
+
+image:resources/output3.png[output for join-and-colour]
 
 ### more
 
@@ -93,7 +158,10 @@ cd perl6-terminal-table && git checkout v0.0.1 && zef install .
 
 ## From zef
 
+[source, shell]
+-------------------------
 zef update && zef install Terminal::Table
+-------------------------
 
 # License
 
