@@ -57,7 +57,8 @@ sub create-generator(@data, :$style = Style::Default::ASCII) is export {
         }
         default {
             unless $style.defined {
-                X::Kinoko::Error.new(msg => 'Not recognize style.').throw();
+                X::Kinoko::Error.new(msg => 'Not recognize style.')
+                .throw();
             }
             $style;
         }
