@@ -100,8 +100,12 @@ class Sentence::Actions {
 }
 
 sub split-w($str, Int $length, :$force = False) {
-	Sentence.parse($str, :actions(my $a = Sentence::Actions.new(max => $length, :$force)));
-	$a.lines();
+	if $str eq "" {
+		[ String.new(value => ""), ];
+	} else {
+		Sentence.parse($str, :actions(my $a = Sentence::Actions.new(max => $length, :$force)));
+		$a.lines();
+	}
 }
 
 multi sub wrap(String $str, Int :$max-width, Int :$tabstop, Bool :$force = False) is export {

@@ -40,8 +40,10 @@ class Line {
     }
 
     method extend-to(Int $width, :$v) {
+        return self.clone() if $width <= 1;
         unless $width %% $!base.width {
-            X::Kinoko::Error.new(msg => 'width must be integer multiple of base width.').throw();
+            X::Kinoko::Error.new(msg => 'width must be integer multiple of base width.')
+            .throw();
         }
         self.new(base => $!base.clone(), n => ($width div $!base.width) * ($v ?? -1 !! 1));
     }
@@ -261,7 +263,7 @@ class Content {
     method extend-v(Int $h) {
         my @temp = @!lines;
         for self.height() ...^ $h {
-            @temp.push(String.new(value => (' ' x self.max-width())));
+            @temp.push(String.new(value => "").extend-to(self.max-width()));
         }
         self.new-from-string-array-padding(@temp, @!padding);
     }

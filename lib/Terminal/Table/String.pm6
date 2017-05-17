@@ -22,18 +22,27 @@ class String is Str {
     }
 
     method extend-to(Int $width) {
-        unless $width %% $!width {
-            X::Kinoko::Error.new(msg => 'Extend width must be divides by string width').throw();
+        my Str $value = ($!width == 0 && $width > 0) ?? &zero-padding() !! self.Str();
+        if $!width > 0 {
+            unless $width %% $!width {
+                X::Kinoko::Error.new(msg => 'Extend width must be divides by string width')
+                .throw();
+            }
+            return self.new(value => $value x ( $width div $!width ), width => $width );
+        } else {
+            return self.new(value => $value x $width, width => $width );
         }
-        return self.new(value => self.Str() x ( $width div $!width ), width => $width );
     }
 
     method expand() {
-        self.new(value => expand([self.Str()], tabstop())[0], :$!width);
+        self.new(value => expand([self.Str(), ], tabstop())[0], :$!width);
     }
 
     method unexpand() {
-        self.new(value => unexpand([self.Str()], tabstop())[0], :$!width);
+        # avoid text::tabs bug
+        return $!width == 0 ??
+            self.clone() !!
+            self.new(value => unexpand([self.Str(), ], tabstop())[0], :$!width);
     }
 
     method clone() {
