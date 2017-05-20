@@ -4,65 +4,8 @@ use Terminal::Table::Style;
 use Terminal::Table::Generator;
 
 sub create-generator(@data, :$style = Style::Default::ASCII) is export {
-    my $gen-style = do
-    given $style {
-        when Style::Default::ASCII {
-            Style.new(
-                corner-style => Style::Corner.ascii(),
-                line-style => Style::Line.ascii(),
-                content-style => Style::Content.space(),
-            );
-        }
-        when Style::Default::SINGLE {
-            Style.new(
-                corner-style => Style::Corner.single(),
-                line-style => Style::Line.single(),
-                content-style => Style::Content.space(),
-            );
-        }
-        when Style::Default::NONE {
-            Style.new(
-                corner-style => Style::Corner.none(),
-                line-style => Style::Line.none(),
-                content-style => Style::Content.space(),
-            );
-        }
-        when Style::Default::SPACE {
-            Style.new(
-                corner-style => Style::Corner.space(),
-                line-style => Style::Line.space(),
-                content-style => Style::Content.space(),
-            );
-        }
-        when Style::Default::DOUBLE {
-            Style.new(
-                corner-style => Style::Corner.double(),
-                line-style => Style::Line.double(),
-                content-style => Style::Content.space(),
-            );
-        }
-        when Style::Default::DOT {
-            Style.new(
-                corner-style => Style::Corner.single(),
-                line-style => Style::Line.dot(),
-                content-style => Style::Content.space(),
-            );
-        }
-        when Style::Default::ROUND {
-            Style.new(
-                corner-style => Style::Corner.round(),
-                line-style => Style::Line.single(),
-                content-style => Style::Content.space(),
-            );
-        }
-        default {
-            unless $style.defined {
-                X::Kinoko::Error.new(msg => 'Not recognize style.')
-                .throw();
-            }
-            $style;
-        }
-    };
+    my $gen-style = Style.default(:$style);
+
     my Generator $gen .= new(style => $gen-style);
 
     $gen.from-array(@data);
@@ -292,21 +235,48 @@ Return the maximum column count of table content data.
 
 Return the column count of table content data in C<$index> line.
 
-=head3 colour(Int $x, Int $y, Color::String $style, Int $row = 0 --> Generator::Table)
+=head3 colour(Int $r, Int $c, Color::String $style, Int $row = 0 --> Generator::Table)
 
-Set color style for C<$row> line of cell at coord (I<$x>, I<$y>) base on (zero, zero).
+Set color style for C<$row> line of cell (at row I<$r>, column I<$c>) base on (zero, zero).
 
-=head3 colour(Int $x, Int $y, Color::String $style --> Generator::Table)
+=head3 colour(Int $r, Int $c, Color::String $style --> Generator::Table)
 
-Set color style for all line of cell at coord (I<$x>, I<$y>) base on (zero, zero).
+Set color style for all line of cell (at row I<$r>, column I<$c>) base on (zero, zero).
+
+=head3 hide and unhide
+
+The result table:
+
+[ + -- + -- + ]
+[ | xx | xx | ]
+[ + -- + -- + ]
+[ | xx | xx | ]
+[ + -- + -- + ]
+
+C<hide> and C<unhide> apply on result table. You can hide one row or one column,
+even one element of result table (frame or content("xx" in the table)).
+
+The C<$r> and C<$c> is row index and column index of result table element;
 
 =head3 hide(Int $index, :$v --> Generator::Table)
 
-Hide one horizonal-frame line or vertical-frame line at C<$index>.
+Hide C<$index> row of result table.
+
+=head3 hide(Int $r, Int $c --> Generator::Table)
+
+Hide C<$c> column in the C<$r> row of the result table.
 
 =head3 unhide(Int $index, :$v --> Generator::Table)
 
-Unhide one horizonal-frame line or vertical-frame line at C<$index>.
+Unhide C<$index> row of result table.
+
+=head3 unhide(Int $r, Int $c --> Generator::Table)
+
+Unhide C<$c> column in the C<$r> row of the result table.
+
+=head3 is-hidden(Int $r, Int $c, :$v --> Generator::Table)
+
+Rerturn True if C<$c> column in C<$r> row of result table is hidden.
 
 =head3 to-array(Bool :$coloured = False, :$helper = &visitor-helper() --> Array)
 
@@ -316,7 +286,7 @@ Travel the table, return a array contains frame and content.
 
 Print the table.
 
-=head3 visit-all(Bool $coloured = True, :&h-frame, :&v-frame)
+=head3 visit(Bool $coloured = True, :&h-frame, :&v-frame)
 
 =begin code
 
@@ -332,16 +302,13 @@ my &v-frame = sub (|c) {
         "".say;
     }
 };
-$foo.visit-all(:&h-frame, :&v-frame, True);
+$foo.visit(:&h-frame, :&v-frame, True);
 
 =end code
 
-Ignore the visibility of frame, visit all data in table.
-
-=head3 visit(Bool $coloured = True, :&h-frame, :&v-frame)
-
 Visit the table data, call C<&h-frame> when access horizonal-frame line, and C<&v-frame>
+for horizonal-frame line and content. In your callback, you can use some helper
+method in C<VisitorHelper>.
 
-for horizonal-frame line and content.
 
 =end pod
