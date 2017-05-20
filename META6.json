@@ -1,7 +1,7 @@
 {
     "perl"        : "6.c",
     "name"        : "Terminal::Table",
-    "version"     : "0.0.2",
+    "version"     : "0.0.5",
     "license"     : "MIT",
     "description" : "Advanced table generate module for perl6",
     "depends"     : [
@@ -23,13 +23,14 @@
         "Terminal::Table::Frame"        : "lib/Terminal/Table/Frame.pm6",
         "Terminal::Table::LightWrap"    : "lib/Terminal/Table/LightWrap.pm6",
         "Terminal::Table::Generator"    : "lib/Terminal/Table/Generator.pm6",
-        "Terminal::Table::Exception"    : "lib/Terminal/Table/Exception.pm6"
+        "Terminal::Table::Exception"    : "lib/Terminal/Table/Exception.pm6",
+        "Terminal::Table::VisitorHelper": "lib/Terminal/Table/VisitorHelper.pm6"
     },
 	"auth" : "github:araraloren",
     "authors" : "Loren",
-    "source-url"  : "https://github.com/araraloren/perl6-terminal-table/archive/v0.0.2.zip",
+    "source-url"  : "https://github.com/araraloren/perl6-terminal-table/archive/v0.0.5.zip",
     "support" : {
         "bugtracker" : "https://github.com.araraloren/perl6-terminal-table/issues",
-        "source" : "https://github.com/araraloren/perl6-terminal-table/tree/v0.0.2"
+        "source" : "https://github.com/araraloren/perl6-terminal-table/tree/v0.0.5"
     }
 }

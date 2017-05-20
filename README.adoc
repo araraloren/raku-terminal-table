@@ -142,6 +142,92 @@ It will output:
 
 image:resources/output3.png[output for join-and-colour]
 
+### Irregular shape
+
+[source, perl6]
+-------------------------
+#!/usr/bin/env perl6
+
+use v6;
+use Terminal::Table;
+
+constant SIZE = 22;
+
+my $g = create-generator([
+    'C' xx SIZE,
+    'C' xx SIZE,
+    'C' xx SIZE,
+    'C' xx SIZE,
+    'C' xx SIZE,
+    'C' xx SIZE,
+    'C' xx SIZE,
+]);
+
+$g.generate;
+
+my &hide = -> $x, $y {
+    my ($r, $c) = ($g.row-count() * 2, $g.col-count($x) * 2);
+    my ($rx, $ry) = ($x * 2, $y * 2);
+
+    my $top = $rx == 0 || $g.is-hidden($rx - 1, $ry + 1);
+    my $top-left = ($rx == 0 || $ry == 0) || $g.is-hidden($rx - 1, $ry - 1);
+    my $top-right = ($rx == 0 || $ry + 2 == $c) || $g.is-hidden($rx - 1, $ry + 3);
+    my $bottom = ($rx + 2 == $r) || $g.is-hidden($rx + 3, $ry + 1);
+    my $bottom-left = ($rx + 2 == $r || $ry == 0) || $g.is-hidden($rx + 3, $ry - 1);
+    my $bottom-right = ($rx + 2 == $r || $ry + 2 == $c) || $g.is-hidden($rx + 3, $ry + 3);
+    my $left = $ry == 0 || $g.is-hidden($rx + 1, $ry - 1);
+    my $right = ($ry + 2 == $c) || $g.is-hidden($rx + 1, $ry + 3);
+
+    if $top && $top-left && $left {
+        $g.hide($rx, $ry, :replace-with-space);
+    }
+    if $top {
+        $g.hide($rx, $ry + 1, :replace-with-space);
+    }
+    if $top && $top-right && $right {
+        $g.hide($rx, $ry + 2, :replace-with-space);
+    }
+    if $left {
+        $g.hide($rx + 1, $ry, :replace-with-space);
+    }
+    if $right {
+        $g.hide($rx + 1, $ry + 2, :replace-with-space);
+    }
+    if $left && $bottom-left && $bottom {
+        $g.hide($rx + 2, $ry, :replace-with-space);
+    }
+    if $bottom {
+        $g.hide($rx + 2, $ry + 1, :replace-with-space);
+    }
+    if $right && $bottom-right && $bottom {
+        $g.hide($rx + 2, $ry + 2, :replace-with-space);
+    }
+    $g.hide($rx + 1, $ry + 1, :replace-with-space);
+};
+
+&hide(1, 13 + $_) for ^8;
+&hide($_, 13) for 2 .. 5;
+&hide($_, 14) for 2 .. 5;
+&hide(5, 13 + $_) for ^8;
+&hide($_, 20) for 3 .. 4;
+&hide($_, 19) for 3 .. 4;
+&hide(3, 15 + $_) for ^5;
+
+&hide(1, 3 + $_) for ^8;
+&hide($_, 3) for 2 .. 5;
+&hide($_, 4) for 2 .. 5;
+&hide($_, 10) for 2 .. 3;
+&hide($_, 9) for 2 .. 3;
+&hide(3, 4 + $_) for ^6;
+&hide(5, 2 + $_) for ^4;
+
+$g.print;
+-------------------------
+
+It will output:
+
+image:resources/output4.png[output for irregular shape]
+
 ### more
 
 For more usage, check out sample or POD document.
@@ -174,3 +260,8 @@ zef update && zef install Terminal::Table
 # TODO
 
     None
+    + hide(:frame, :data, :replace-with-space)
+    + Generator::Table 暴露出 Frame Content 来提供 hide接口
+    √ handle empty String
+    + hide-empty-content-frame
+    + String  {  as space 同等宽度 }

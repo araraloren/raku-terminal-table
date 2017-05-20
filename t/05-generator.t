@@ -60,4 +60,12 @@ lives-ok {
     }
 };
 
+lives-ok {
+    for [ ASCII, SINGLE, NONE, SPACE, DOUBLE, DOT, ROUND ] {
+        my $gt = Generator.new(style => Style.default(style => $_));
+        $gt.add-cell(< a b c d e f g >, Color::String.new(color => <underline>));
+        $gt.generator.generate.print(:coloured);
+    }
+};
+
 done-testing;
