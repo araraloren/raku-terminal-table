@@ -4,6 +4,7 @@ use HTTP::Client;
 use Terminal::Table::Style;
 use Terminal::Table::Settings;
 use Terminal::Table::Generator;
+use Terminal::Table::VisitorHelper;
 
 constant MODULE-LIST = 'http://modules.perl6.org';
 
