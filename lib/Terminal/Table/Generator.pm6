@@ -6,9 +6,12 @@ use Terminal::Table::Style;
 use Terminal::Table::Frame;
 use Terminal::Table::Settings;
 use Terminal::Table::Exception;
+use Terminal::Table::VisitorHelper;
 
 my $init-now = INIT now;
 
+class CellRef { ... };
+class Generator { ... };
 class Generator::StyleCache { ... };
 
 class Generator {
@@ -96,8 +99,8 @@ class Generator {
 
     multi method add-cell(@lines, Color::String $style) {
         @!data[$!index].push(
-            Content.new-from-string-array(
-                to-string-array(@lines, $style)
+            Content.new(
+                lines => to-string-array(@lines, $style)
             )
         );
         self;
@@ -219,133 +222,10 @@ class Generator {
     }
 }
 
-class Generator::VisitorHelper {
-    has %.callback-map;
-
-    method __check_callback_map($name) {
-        unless %!callback-map{$name}:exists {
-            %!callback-map{$name} = Array.new;
-        }
-    }
-
-    method add-helper(Str $name, &callback) {
-        self.__check_callback_map($name);
-		%!callback-map{$name}.push(&callback);
-    }
-
-	method FALLBACK($name, |c) {
-		for @(%!callback-map{$name}) -> &cb {
-			if c ~~ &cb.signature {
-                return &cb(|c);
-            }
-		}
-        fail "Not wrapper named: $name with signature {c.perl}!";
-	}
-}
-
-sub visitor-helper() returns Generator::VisitorHelper is export is rw {
-    state $helper = Generator::VisitorHelper.new;
-
-    $helper.add-helper("colour",
-    sub ($s, Bool $coloured) {
-        return $s.Str();
-    });
-    $helper.add-helper("colour",
-    sub ($pleft, String $s, $pright, Bool $coloured)  {
-        return $pleft ~ (
-            ?$coloured && $s.coloured() ??
-            Shader.colour($s.Str(), $s.style()) !! $s.Str()
-        ) ~ $pright;
-    });
-    $helper.add-helper("h-frame",
-    sub (@h-frame, @v-frame-visibility, Bool $coloured) {
-        return lazy gather for @h-frame Z, @v-frame-visibility -> ($f, $v) {
-            take &visitor-helper().colour($f, $coloured) if $v;
-        };
-    });
-    $helper.add-helper("h-frame",
-    sub (@h-frame, Bool $coloured) {
-        return lazy gather for @h-frame -> $f {
-            take &visitor-helper().colour($f, $coloured);
-        };
-    });
-    $helper.add-helper("v-frame",
-    sub (@v-frame, @contents, @v-frame-visibility, Bool $coloured){
-        my @ret = [];
-        if +@v-frame > 0 && +@contents > 0 {
-            for ^@contents[0].height -> $row {
-                @ret.push(
-                    lazy gather {
-                        for (@v-frame Z, @contents).flat Z, @v-frame-visibility -> ($f-or-c, $v) {
-                            take &visitor-helper().colour(| $f-or-c.get-line($row), $coloured) if $v;
-                        }
-                        take &visitor-helper().colour(|@v-frame[* - 1].get-line($row), $coloured)
-                            if @v-frame-visibility[* - 1];
-                    }
-                );
-            }
-        } elsif +@contents > 0 { #`( v-frame will be empty when style is none)
-            for ^@contents[0].height -> $row {
-                @ret.push(lazy gather {
-                    for @contents -> $c {
-                        take &visitor-helper().colour(| $c.get-line($row), $coloured);
-                    }
-                });
-            }
-        }
-        return @ret;
-    });
-    $helper.add-helper("v-frame",
-    sub (@v-frame, @contents, Bool $coloured){
-        my @ret = [];
-        if +@v-frame > 0 && +@contents > 0 {
-            for ^@contents[0].height -> $row {
-                @ret.push(
-                    lazy gather {
-                        for (@v-frame Z, @contents).flat -> $f-or-c {
-                            take &visitor-helper().colour(| $f-or-c.get-line($row), $coloured);
-                        }
-                        take &visitor-helper().colour(|@v-frame[* - 1].get-line($row), $coloured);
-                    }
-                );
-            }
-        } elsif +@contents > 0 { #`( v-frame will be empty when style is none)
-            for ^@contents[0].height -> $row {
-                @ret.push(
-                    lazy gather {
-                        for @contents -> $c {
-                            take &visitor-helper().colour(| $c.get-line($row), $coloured);
-                        }
-                    }
-                );
-            }
-        }
-        return @ret;
-    });
-    $helper.add-helper("generate",
-    sub (@h-frame, @v-frame, @contents, Bool $coloured) {
-        my @ret = [];
-        if +@h-frame > 0 {
-            @ret.push(lazy gather for @h-frame -> $f {
-                take &visitor-helper().colour($f, $coloured);
-            });
-        }
-        if +@contents > 0 {
-            @ret.append(
-                &visitor-helper().v-frame(@v-frame, @contents, $coloured)
-            );
-        }
-        return @ret;
-    });
-    $helper;
-}
-
 class Generator::Table {
     has @.sc;
     has @.content;
     has @.frame;
-    has @.v-frame-visibility;
-    has @.h-frame-visibility;
     has @.style;
     has @.iterator;
     has @.max-widths;
@@ -508,20 +388,10 @@ class Generator::Table {
         @!frame[$last-index][* - 1] = $cache.corner().bottom().right();
     }
 
-    method !__gen_frame_visibility() {
-        # the frame-visibility about result table
-        unless @!style[* - 1].style.line.is-none() {
-            @!v-frame-visibility = True xx (max(@!content>>.elems) * 2 + 1);
-            @!h-frame-visibility = True xx (+@!content * 2 + 1);
-        }
-    }
-
     method !__reset() {
         if $!index > 0 {
             @!content = Array.new;
             @!frame = Array.new;
-            @!v-frame-visibility = Array.new;
-            @!h-frame-visibility = Array.new;
             @!iterator = Array.new;;
             @!max-widths = Array.new;
             @!max-heights = Array.new;
@@ -535,7 +405,6 @@ class Generator::Table {
         note "{&?ROUTINE}:\t\n{now - $init-now}" if debug();
         self!__gen_frame_and_content(?$coloured);
         note "{&?ROUTINE}:\t\n{now - $init-now}" if debug();
-        self!__gen_frame_visibility();
         self;
     }
 
@@ -547,6 +416,10 @@ class Generator::Table {
     method clear-callback() {
         &!callback = Block;
         self;
+    }
+
+    method Int {
+        +@!content;
     }
 
     method row-count() {
@@ -561,50 +434,238 @@ class Generator::Table {
         @!content[$index].elems;
     }
 
-    multi method colour(Int $x, Int $y, Color::String $style, Int $row = 0) {
-        @!content[$x][$y].colour($row, $style);
+    multi method colour(Int $r, Int $c, Color::String $style, Int $row = 0) {
+        @!content[$r][$c].colour($row, $style);
         self;
     }
 
-    multi method colour(Int $x, Int $y, Color::String $style) {
-        @!content[$x][$y].colour($_, $style) for ^@!content[$x][$y].elems;
+    multi method colour(Int $r, Int $c, Color::String $style) {
+        @!content[$r][$c].colour($style);
         self;
     }
 
-    multi method hide(WhateverCode $wc, :$v) {
+    multi method colour(Int $index, Color::String $style, :$v) {
         if ?$v {
-            @!v-frame-visibility[$wc] = False;
+            for @!content -> $cl {
+                $cl.[$index].colour($style) if $index < $cl.elems;
+            }
         } else {
-            @!h-frame-visibility[$wc] = False;
+            .colour($style) for @!content[$index];
+        }
+    }
+
+    # [ + -- + -- + ]
+    # [ |    |    | ]
+    # [ + -- + -- + ]
+    # [ |    |    | ]
+    # [ + -- + -- + ]
+    # Frame data is store in above 2d-array form
+    # [  xx    xx   ]
+    # [  xx    xx   ]
+    # Content data is store in above 2d-array form
+    # top-left    top   top-right
+    #         + ------- +
+    #    left | content | right
+    #        + ------- +
+    #bottom-left bottom bottom-right
+    # A cell has 4 corner, 4 line, 1 content
+    # Access corner/line with their direction
+    method !__ref_a_cell(Int $r, Int $c) {
+        my \fr = @!frame;
+        my \cr = @!content;
+        return CellRef.new(frameref => fr, contentref => cr, :$r, :$c);
+    }
+
+    multi method cell(Int $r, Int $c) {
+        return self!__ref_a_cell($r, $c);
+    }
+
+    multi method cell(WhateverCode $wc, Int $c) {
+        return self!__ref_a_cell($wc.(self.row-count()), $c);
+    }
+
+    multi method cell(Int $r, WhateverCode $wc) {
+        return self!__ref_a_cell($r, $wc.(self.col-count($r)));
+    }
+
+    multi method cell(WhateverCode $wcr, WhateverCode $wcc) {
+        my $r = $wcr.(self.row-count());
+        my $c = $wcc.(self.col-count($r));
+        return self!__ref_a_cell($r, $c);
+    }
+
+    # [ + -- + -- + ]
+    # [ | xx | xx | ]
+    # [ + -- + -- + ]
+    # [ | xx | xx | ]
+    # [ + -- + -- + ]
+    # hide operator on result table
+    multi method hide(WhateverCode $wc, :$v, :$replace-with-space) {
+        my $max = ?$v ?? self.max-col-count() !! self.row-count();
+        self.hide($wc.($max * 2 + 1), :$v, :$replace-with-space);
+        self;
+    }
+
+    multi method hide(Int $index, :$v, :$replace-with-space) {
+        if ?$v {
+            if $index % 2 == 1  {
+                for ^self.row-count() -> $row {
+                    if $index < @!frame[$row * 2].elems {
+                        @!frame[$row * 2][$index].hide(:$replace-with-space);
+                        @!content[$row][($index - 1) div 2].hide(:$replace-with-space);
+                    }
+                }
+            } else {
+                for ^self.row-count() -> $row {
+                    if $index < @!frame[$row * 2].elems {
+                        @!frame[$row * 2][$index].hide(:$replace-with-space);
+                        @!frame[$row * 2 + 1][$index div 2].hide(:$replace-with-space);
+                    }
+                }
+            }
+        } else {
+            if $index % 2 == 1 {
+                .hide(:$replace-with-space) for @(@!content[($index - 1) div 2]);
+            }
+            .hide(:$replace-with-space) for @(@!frame[$index]);
         }
         self;
     }
 
-    multi method hide(Int $index, :$v) {
-        if ?$v {
-            @!v-frame-visibility[$index] = False;
-        } else {
-            @!h-frame-visibility[$index] = False;
-        }
+    multi method hide(Int $r, Int $c, :$replace-with-space) {
+        my $f-or-c = ($r % 2 == 1) ?? (
+            $c % 2 == 1 ?? @!content[($r - 1) div 2][($c - 1) div 2] !! @!frame[$r][$c div 2]
+        ) !! @!frame[$r][$c];
+        $f-or-c.hide(:$replace-with-space);
+        self;
+    }
+
+    multi method hide(WhateverCode $wc, Int $c, :$replace-with-space) {
+        my $r = $wc.(self.row-count() * 2  + 1);
+        my $f-or-c = ($r % 2 == 1) ?? (
+            $c % 2 == 1 ?? @!content[($r - 1) div 2][($c - 1) div 2] !! @!frame[$r][$c div 2]
+        ) !! @!frame[$r][$c];
+        $f-or-c.hide(:$replace-with-space);
+        self;
+    }
+
+    multi method hide(Int $r, WhateverCode $wc, :$replace-with-space) {
+        my $c = $wc.(self.max-col-count() * 2  + 1);
+        my $f-or-c = ($r % 2 == 1) ?? (
+            $c % 2 == 1 ?? @!content[($r - 1) div 2][($c - 1) div 2] !! @!frame[$r][$c div 2]
+        ) !! @!frame[$r][$c];
+        $f-or-c.hide(:$replace-with-space);
+        self;
+    }
+
+    multi method hide(WhateverCode $wcr, WhateverCode $wcc, :$replace-with-space) {
+        my $r = $wcr.(self.row-count() * 2  + 1);
+        my $c = $wcc.(self.max-col-count() * 2  + 1);
+        my $f-or-c = ($r % 2 == 1) ?? (
+            $c % 2 == 1 ?? @!content[($r - 1) div 2][($c - 1) div 2] !! @!frame[$r][$c div 2]
+        ) !! @!frame[$r][$c];
+        $f-or-c.hide(:$replace-with-space);
         self;
     }
 
     multi method unhide(WhateverCode $wc, :$v) {
-        if ?$v {
-            @!v-frame-visibility[$wc] = True;
-        } else {
-            @!h-frame-visibility[$wc] = True;
-        }
+        my $max = ?$v ?? self.max-col-count() !! self.row-count();
+        self.unhide($wc.($max * 2 + 1), :$v);
         self;
     }
 
     multi method unhide(Int $index, :$v) {
         if ?$v {
-            @!v-frame-visibility[$index] = True;
+            if $index % 2 == 1  {
+                for ^self.row-count() -> $row {
+                    if $index < @!frame[$row * 2].elems {
+                        @!frame[$row * 2][$index].unhide();
+                        @!content[$row][($index - 1) div 2].unhide();
+                    }
+                }
+            } else {
+                for ^self.row-count() -> $row {
+                    if $index < @!frame[$row * 2].elems {
+                        @!frame[$row * 2][$index].unhide();
+                        @!frame[$row * 2 + 1][$index div 2].unhide();
+                    }
+                }
+            }
         } else {
-            @!h-frame-visibility[$index] = True;
+            if $index % 2 == 1 {
+                .unhide() for @(@!content[($index - 1) div 2]);
+            }
+            .unhide() for @(@!frame[$index]);
         }
         self;
+    }
+
+    multi method unhide(Int $r, Int $c) {
+        my $f-or-c = ($r % 2 == 1) ?? (
+            $c % 2 == 1 ?? @!content[($r - 1) div 2][($c - 1) div 2] !! @!frame[$r][$c div 2]
+        ) !! @!frame[$r][$c];
+        $f-or-c.unhide();
+        self;
+    }
+
+    multi method unhide(WhateverCode $wc, Int $c) {
+        my $r = $wc.(self.row-count() * 2  + 1);
+        my $f-or-c = ($r % 2 == 1) ?? (
+            $c % 2 == 1 ?? @!content[($r - 1) div 2][($c - 1) div 2] !! @!frame[$r][$c div 2]
+        ) !! @!frame[$r][$c];
+        $f-or-c.unhide();
+        self;
+    }
+
+    multi method unhide(Int $r, WhateverCode $wc) {
+        my $c = $wc.(self.max-col-count() * 2  + 1);
+        my $f-or-c = ($r % 2 == 1) ?? (
+            $c % 2 == 1 ?? @!content[($r - 1) div 2][($c - 1) div 2] !! @!frame[$r][$c div 2]
+        ) !! @!frame[$r][$c];
+        $f-or-c.unhide();
+        self;
+    }
+
+    multi method unhide(WhateverCode $wcr, WhateverCode $wcc) {
+        my $r = $wcr.(self.row-count() * 2  + 1);
+        my $c = $wcc.(self.max-col-count() * 2  + 1);
+        my $f-or-c = ($r % 2 == 1) ?? (
+            $c % 2 == 1 ?? @!content[($r - 1) div 2][($c - 1) div 2] !! @!frame[$r][$c div 2]
+        ) !! @!frame[$r][$c];
+        $f-or-c.unhide();
+        self;
+    }
+
+    multi method is-hide(Int $r, Int $c) {
+        my $f-or-c = ($r % 2 == 1) ?? (
+            $c % 2 == 1 ?? @!content[($r - 1) div 2][($c - 1) div 2] !! @!frame[$r][$c div 2]
+        ) !! @!frame[$r][$c];
+        !$f-or-c.check-visibility(Visibility::VTRUE);
+    }
+
+    multi method is-hide(WhateverCode $wc, Int $c) {
+        my $r = $wc.(self.row-count() * 2  + 1);
+        my $f-or-c = ($r % 2 == 1) ?? (
+            $c % 2 == 1 ?? @!content[($r - 1) div 2][($c - 1) div 2] !! @!frame[$r][$c div 2]
+        ) !! @!frame[$r][$c];
+        !$f-or-c.check-visibility(Visibility::VTRUE);
+    }
+
+    multi method is-hide(Int $r, WhateverCode $wc) {
+        my $c = $wc.(self.max-col-count() * 2  + 1);
+        my $f-or-c = ($r % 2 == 1) ?? (
+            $c % 2 == 1 ?? @!content[($r - 1) div 2][($c - 1) div 2] !! @!frame[$r][$c div 2]
+        ) !! @!frame[$r][$c];
+        !$f-or-c.check-visibility(Visibility::VTRUE);
+    }
+
+    multi method is-hide(WhateverCode $wcr, WhateverCode $wcc) {
+        my $r = $wcr.(self.row-count() * 2  + 1);
+        my $c = $wcc.(self.max-col-count() * 2  + 1);
+        my $f-or-c = ($r % 2 == 1) ?? (
+            $c % 2 == 1 ?? @!content[($r - 1) div 2][($c - 1) div 2] !! @!frame[$r][$c div 2]
+        ) !! @!frame[$r][$c];
+        !$f-or-c.check-visibility(Visibility::VTRUE);
     }
 
     method to-array(Bool :$coloured = False, :$helper = &visitor-helper()) {
@@ -623,13 +684,13 @@ class Generator::Table {
         my &h-frame = sub (|c) {
             my @t = Array.new;
             @t.push($_) for @($helper.h-frame(|c));
-            @table.push(@t);
+            @table.push(@t) unless +@t == 0;
         };
         my &v-frame = sub (|c) {
             for @($helper.v-frame(|c)) -> $line {
                 my @t = Array.new;
                 @t.push($_) for @($line);
-                @table.push(@t);
+                @table.push(@t) unless +@t == 0;
             }
         };
 
@@ -640,20 +701,25 @@ class Generator::Table {
 
     method print(Bool :$coloured = False, :$helper = &visitor-helper()) {
         my &h-frame = sub (|c) {
-            .print for @($helper.h-frame(|c));
-            "".say;
+            my @line = @($helper.h-frame(|c));
+            unless +@line == 0 {
+                .print for @line;
+                "".say;
+            }
         };
         my &v-frame = sub (|c) {
             for @($helper.v-frame(|c)) -> $line {
-                .print for @($line);
-                "".say;
+                unless +@$line == 0 {
+                    .print for @($line);
+                    "".say;
+                }
             }
         };
 
         self.visit(:&h-frame, :&v-frame, $coloured);
     }
 
-    method visit-all(Bool $coloured = True, :&h-frame, :&v-frame) {
+    method visit(Bool $coloured = True, :&h-frame, :&v-frame) {
         for @!style -> $style {
             for $style.beg .. $style.end -> $index {
                 if $style.style.line.is-none() {
@@ -673,29 +739,6 @@ class Generator::Table {
             &h-frame(@!frame[* - 1], $coloured);
         }
     }
-
-    method visit(Bool $coloured = True, :&h-frame, :&v-frame) {
-        for @!style -> $style {
-            for $style.beg .. $style.end -> $index {
-                if $style.style.line.is-none() {
-                    &v-frame([], @!content[$index], [], $coloured);
-                } else {
-                    my $findex = $index * 2;
-                    if @!h-frame-visibility[$findex] && ?&h-frame {
-                        &h-frame(@!frame[$findex], @!v-frame-visibility, $coloured);
-                    }
-                    if @!h-frame-visibility[$findex + 1] && ?&v-frame {
-                        &v-frame(@!frame[$findex + 1], @!content[$index], @!v-frame-visibility, $coloured);
-                    }
-                }
-            }
-        }
-        unless @!style[* - 1].style.line.is-none() {
-            if @!h-frame-visibility[* - 1] && ?&h-frame {
-                &h-frame(@!frame[* - 1], @!v-frame-visibility, $coloured);
-            }
-        }
-    }
 }
 
 class Generator::StyleCache {
@@ -703,6 +746,22 @@ class Generator::StyleCache {
     has @!hline = Array.new;
     has @!vline = Array.new;
     has $!corner;
+
+    my $using-cache = &style-cache();
+
+    sub make-and-get-cache(\cache, &make-cache) {
+        $using-cache ?? (
+            return cache // do {
+                cache = &make-cache();
+                cache;
+            };
+        ) !! (
+            cache ?? cache.clone() !! do {
+                cache = &make-cache();
+                cache;
+            }
+        )
+    }
 
     method hline(Int $col, Int $width) {
         return @!hline[$col] || do {
@@ -714,24 +773,21 @@ class Generator::StyleCache {
                 has $!bottom;
 
                 method top() {
-                    return $!top || do {
-                        $!top = $!style.line.top.extend-to($!width);
-                        $!top;
-                    }
+                    return &make-and-get-cache($!top, -> {
+                        $!style.line.top.extend-to($!width);
+                    });
                 }
 
                 method middle() {
-                    return $!middle || do {
-                        $!middle = $!style.line.h-middle.extend-to($!width);
-                        $!middle;
-                    }
+                    return &make-and-get-cache($!middle, -> {
+                        $!style.line.h-middle.extend-to($!width);
+                    });
                 }
 
                 method bottom() {
-                    return $!bottom || do {
-                        $!bottom = $!style.line.bottom.extend-to($!width);
-                        $!bottom;
-                    }
+                    return &make-and-get-cache($!bottom, -> {
+                        $!style.line.bottom.extend-to($!width);
+                    });
                 }
             }.new(:$!style, :$width);
             @!hline[$col];
@@ -748,24 +804,21 @@ class Generator::StyleCache {
                 has $!right;
 
                 method left() {
-                    return $!left || do {
-                        $!left = $!style.line.left.extend-to($!height, :v);
-                        $!left;
-                    }
+                    return &make-and-get-cache($!left, -> {
+                        $!style.line.left.extend-to($!height, :v);
+                    });
                 }
 
                 method middle() {
-                    return $!middle || do {
-                        $!middle = $!style.line.v-middle.extend-to($!height, :v);
-                        $!middle;
-                    }
+                    return &make-and-get-cache($!middle, -> {
+                        $!style.line.v-middle.extend-to($!height, :v);
+                    });
                 }
 
                 method right() {
-                    return $!right || do {
-                        $!right = $!style.line.right.extend-to($!height, :v);
-                        $!right;
-                    }
+                    return &make-and-get-cache($!right, -> {
+                        $!style.line.right.extend-to($!height, :v);
+                    });
                 }
             }.new(:$!style, :$height);
             @!vline[$row];
@@ -783,24 +836,21 @@ class Generator::StyleCache {
                 }
 
                 method left {
-                    @!array[0] || do {
-                        @!array[0] = $!style.left.clone();
-                        @!array[0];
-                    };
+                    return &make-and-get-cache(@!array[0], -> {
+                        $!style.left.clone();
+                    });
                 }
 
                 method middle {
-                    @!array[1] || do {
-                        @!array[1] = $!style.middle.clone();
-                        @!array[1];
-                    };
+                    return &make-and-get-cache(@!array[1], -> {
+                        $!style.middle.clone();
+                    });
                 }
 
                 method right {
-                    @!array[2] || do {
-                        @!array[2] = $!style.right.clone();
-                        @!array[2];
-                    };
+                    return &make-and-get-cache(@!array[2], -> {
+                        $!style.right.clone();
+                    });
                 }
             }
 
@@ -837,5 +887,64 @@ class Generator::StyleCache {
             }.new(:$!style);
             $!corner;
         }
+    }
+}
+
+class CellRef {
+    has $.frameref;
+    has $.contentref;
+    has $.r;
+    has $.c;
+
+    method content() {
+        return $!contentref.[$!r][$!c];
+    }
+
+    method corner() {
+        return class :: {
+            has $.frameref;
+            has $.r;
+            has $.c;
+
+            method top-left() {
+                return $!frameref.[$!r * 2][$!c * 2];
+            }
+
+            method top-right() {
+                return $!frameref.[$!r * 2][($!c + 1) * 2];
+            }
+
+            method bottom-left() {
+                return $!frameref.[($!r + 1) * 2][$!c * 2];
+            }
+
+            method bottom-right() {
+                return $!frameref.[($!r + 1) * 2][($!c + 1) * 2];
+            }
+        }.new(:$!r, :$!c, :$!frameref);
+    }
+
+    method line() {
+        return class :: {
+            has $.frameref;
+            has $.r;
+            has $.c;
+
+            method top() {
+                return $!frameref.[$!r * 2][$!c * 2 + 1];
+            }
+
+            method left() {
+                return $!frameref.[$!r * 2 + 1][$!c * 2];
+            }
+
+            method right() {
+                return $!frameref.[$!r * 2 + 1][($!c + 1) * 2];
+            }
+
+            method bottom() {
+                return $!frameref.[($!r + 1) * 2][$!c * 2 + 1];
+            }
+        }.new(:$!r, :$!c, :$!frameref);
     }
 }
