@@ -636,14 +636,14 @@ class Generator::Table {
         self;
     }
 
-    multi method is-hide(Int $r, Int $c) {
+    multi method is-hidden(Int $r, Int $c) {
         my $f-or-c = ($r % 2 == 1) ?? (
             $c % 2 == 1 ?? @!content[($r - 1) div 2][($c - 1) div 2] !! @!frame[$r][$c div 2]
         ) !! @!frame[$r][$c];
         !$f-or-c.check-visibility(Visibility::VTRUE);
     }
 
-    multi method is-hide(WhateverCode $wc, Int $c) {
+    multi method is-hidden(WhateverCode $wc, Int $c) {
         my $r = $wc.(self.row-count() * 2  + 1);
         my $f-or-c = ($r % 2 == 1) ?? (
             $c % 2 == 1 ?? @!content[($r - 1) div 2][($c - 1) div 2] !! @!frame[$r][$c div 2]
@@ -651,7 +651,7 @@ class Generator::Table {
         !$f-or-c.check-visibility(Visibility::VTRUE);
     }
 
-    multi method is-hide(Int $r, WhateverCode $wc) {
+    multi method is-hidden(Int $r, WhateverCode $wc) {
         my $c = $wc.(self.max-col-count() * 2  + 1);
         my $f-or-c = ($r % 2 == 1) ?? (
             $c % 2 == 1 ?? @!content[($r - 1) div 2][($c - 1) div 2] !! @!frame[$r][$c div 2]
@@ -659,7 +659,7 @@ class Generator::Table {
         !$f-or-c.check-visibility(Visibility::VTRUE);
     }
 
-    multi method is-hide(WhateverCode $wcr, WhateverCode $wcc) {
+    multi method is-hidden(WhateverCode $wcr, WhateverCode $wcc) {
         my $r = $wcr.(self.row-count() * 2  + 1);
         my $c = $wcc.(self.max-col-count() * 2  + 1);
         my $f-or-c = ($r % 2 == 1) ?? (
