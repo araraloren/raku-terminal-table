@@ -13,7 +13,13 @@ sub expand-width(Str $str, Int $tabstop) returns Int is export {
     return wcswidth(expand([$str], $tabstop)[0]);
 }
 
-class String is Str {
+role ToWhiteSpace {
+    method to-space() {
+        return ' ' x self.width();
+    } 
+}
+
+class String is Str does ToWhiteSpace {
     has Int $.width;
     has     $.style;
 
@@ -39,14 +45,15 @@ class String is Str {
     }
 
     method unexpand() {
-        # avoid text::tabs bug
-        return $!width == 0 ??
-            self.clone() !!
-            self.new(value => unexpand([self.Str(), ], tabstop())[0], :$!width);
+        self.new(value => unexpand([self.Str(), ], tabstop())[0], :$!width);
     }
 
-    method clone() {
-        self.new(value => self.Str::clone(), :$!width);
+    method clone(*%_) {
+        self.bless(
+            width => %_<width> // $!width,
+            style => %_<style> // $!style.clone()
+        );
+        nextwith(|%_);
     }
 
     multi method Str() {
@@ -59,6 +66,13 @@ class String is Str {
         } else {
             return self.Str();
         }
+    }
+
+    method lines() {
+         return [
+             self.new(value => $_, :$!style)
+                for split(/\n/, self.Str())
+         ];
     }
 
     method coloured() {
