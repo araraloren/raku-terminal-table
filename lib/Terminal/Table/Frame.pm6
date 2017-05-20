@@ -5,7 +5,37 @@ use Terminal::Table::Settings;
 use Terminal::Table::LightWrap;
 use Terminal::Table::Exception;
 
+enum Visibility <<
+    :VTRUE(1)
+    :VFALSE(3)
+    :VSPACE(4)
+>>;
+
+role Visible {
+    has $.visibility = Visibility::VTRUE;
+
+    method check-visibility($visibility = Visibility::VTRUE) {
+        $!visibility == $visibility;
+    }
+
+    method hide(:$replace-with-space) {
+        $!visibility = ?$replace-with-space ??
+            Visibility::VSPACE !! Visibility::VFALSE;
+    }
+
+    method unhide() {
+        $!visibility = Visibility::VTRUE;
+    }
+
+    method clone(*%_) {
+        self.bless(visibility => %_<visibility> // $!visibility);
+    }
+}
+
 class Line {
+    also does Visible;
+    also does ToWhiteSpace;
+
     # use -n represent vertical line
     has String $.base;
     has Int    $.n      = 1;
@@ -48,8 +78,12 @@ class Line {
         self.new(base => $!base.clone(), n => ($width div $!base.width) * ($v ?? -1 !! 1));
     }
 
-    method clone() {
-        self.new(base => $!base.clone(), :$!n);
+    method clone(*%_) {
+        self.bless(
+            base => %_<base> // $!base.clone(),
+            n    => %_<n> // $!n,
+        );
+        nextwith(|%_);
     }
 
     method perl() {
@@ -58,6 +92,9 @@ class Line {
 }
 
 class Corner {
+    also does Visible;
+    also does ToWhiteSpace;
+
     has String $.base;
 
     method width() {
@@ -76,8 +113,11 @@ class Corner {
         return $!base;
     }
 
-    method clone() {
-        self.new(:base($!base.clone()));
+    method clone(*%_) {
+        self.bless(
+            base => %_<base>:exists ?? %_<base> !! $!base.clone(),
+        );
+        nextwith(|%_);
     }
 
     method perl() {
@@ -96,6 +136,9 @@ sub make-lines(@lines) {
 }
 
 class Content {
+    also does ToWhiteSpace;
+    also does Visible;
+
     my class Content::Padding {
         has $.pl is rw = "";
         has $.wl is rw = 0;
@@ -103,7 +146,7 @@ class Content {
         has $.wr is rw = 0;
 
         method clone() {
-            return self.new(:$!wl, :$!wr, pl => $!pl.clone(), pr => $!pr.clone());
+            return self.bless(:$!wl, :$!wr, pl => $!pl.clone(), pr => $!pr.clone());
         }
 
         method width() {
@@ -114,29 +157,21 @@ class Content {
     has @.padding;
     has @.lines handles < AT-POS ASSIGN-POS >;
 
+    multi method new(*%args) {
+        self.bless(|%args);
+        nextsame;
+    }
+
+    multi method new(String $str) {
+        self.bless(lines => $str.lines());
+    }
+
     method new-from-str(Str $str) {
         self.bless()!__make_lines([$str]);
     }
 
-    method new(String $str) {
-        self.bless(lines =>
-            [
-            String.new(value => $_, style => $str.style)
-                for split /\n/, $str.Str()
-            ]
-        );
-    }
-
     method new-from-str-array(@lines) {
         self.bless()!__make_lines(@lines);
-    }
-
-    method new-from-string-array(@lines) {
-        self.bless(lines => @lines);
-    }
-
-    method new-from-string-array-padding(@lines, @padding) {
-        self.bless(lines => @lines, padding => @padding);
     }
 
     method !__make_lines(@lines) {
@@ -197,7 +232,7 @@ class Content {
             );
             @new-padding.push(@temp[$i].[1].clone());
         }
-        self.new-from-string-array-padding(@new-data, @new-padding);
+        self.clone(lines => @new-data, padding => @new-padding);
     }
 
     method align-padding($width, $style) {
@@ -245,7 +280,7 @@ class Content {
         for ^+@lines -> $i {
             @lines[$i].set-style($i < +@!lines ?? @!lines[$i].style !! @!lines[* - 1].style);
         }
-        self.new-from-string-array-padding(@lines, @new-padding);
+        self.clone(:@lines, padding => @new-padding);
     }
 
     method padding($style) {
@@ -257,7 +292,7 @@ class Content {
             $p.wr = $p.wr + ($style.padding-char.width * $style.padding-right);
             @new-padding.push($p.clone());
         }
-        self.new-from-string-array-padding(@!lines, @new-padding);
+        self.clone(padding => @new-padding);
     }
 
     method extend-v(Int $h) {
@@ -265,15 +300,23 @@ class Content {
         for self.height() ...^ $h {
             @temp.push(String.new(value => "").extend-to(self.max-width()));
         }
-        self.new-from-string-array-padding(@temp, @!padding);
+        self.clone(lines => @temp);
     }
 
-    method clone() {
-        self.bless(lines => @!lines.clone(), padding => @!padding.clone());
+    method clone(*%_) {
+        self.bless(
+            lines => %_<lines> // @!lines.clone(),
+            padding => %_<padding> // @!padding.clone()
+        );
+        nextwith(|%_);
     }
 
     method height() {
         +@!lines;
+    }
+
+    method width() {
+        self.max-width();
     }
 
     method max-width() {
@@ -292,7 +335,11 @@ class Content {
         @!lines.elems;
     }
 
-    method colour(Int $index, $style) {
+    multi method colour($style) {
+        .set-style($style) for @!lines;
+    }
+
+    multi method colour(Int $index, $style) {
         @!lines[$index].set-style($style);
     }
 
