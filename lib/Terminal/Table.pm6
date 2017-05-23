@@ -57,6 +57,16 @@ or use class C<Generator> in complex way.
 
 Setting tab width, default is 8.
 
+=head2 zero-padding() returns Str is export is rw
+
+When handle empty Str, the generator will padding with C<&zero-padding()>.
+
+=head2 style-cache() returns Bool is export is rw
+
+If set at true, the C<Generator::Table> will use a cache instead of make clone of
+every frame data. Attention these will cause bug when you want use C<&hide> modify
+result table.
+
 =head2 print-table(@data, @max-widths = [], :$style = Style::Default::ASCII)
 
 =item @data
@@ -223,6 +233,10 @@ Set callback for C<Generator::Table::generate>.
 
 Clear callback.
 
+=head3 Int
+
+Return row count of current table content data.
+
 =head3 row-count( --> Int)
 
 Return row count of current table content data.
@@ -309,6 +323,5 @@ $foo.visit(:&h-frame, :&v-frame, True);
 Visit the table data, call C<&h-frame> when access horizonal-frame line, and C<&v-frame>
 for horizonal-frame line and content. In your callback, you can use some helper
 method in C<VisitorHelper>.
-
 
 =end pod
