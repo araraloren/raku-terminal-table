@@ -13,6 +13,8 @@ table, and you can colour your table content. Also the module has common style p
 
 # Usage
 
+link:README.zh.adoc[中文帮助]
+
 ## Example
 
 ### High Level Interface
@@ -260,8 +262,3 @@ zef update && zef install Terminal::Table
 # TODO
 
     None
-    + hide(:frame, :data, :replace-with-space)
-    + Generator::Table 暴露出 Frame Content 来提供 hide接口
-    √ handle empty String
-    + hide-empty-content-frame
-    + String  {  as space 同等宽度 }
