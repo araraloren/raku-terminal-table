@@ -238,6 +238,7 @@ class Generator::Table {
         self.bless(:@sc, :@style);
     }
 
+    # generte max width of every column
     method !__gen_max_widths(@max-widths) {
         @!max-widths = 0 xx [ .elems for @!sc ].max;
         @!max-widths[0 .. +@max-widths - 1] = @max-widths if +@max-widths > 0;
@@ -273,7 +274,9 @@ class Generator::Table {
                 my @oneline = self!__gen_one_line($style, $index);
                 my $height = max([ .height for @oneline ]);
 
+                # save max height for every line
                 @!max-heights.push($height);
+                # add empty for which little than max height
                 for @oneline -> $content {
                     @!content[$index].push(
                         $content.height < $height ??
@@ -281,6 +284,9 @@ class Generator::Table {
                     );
                 }
                 if $style.line.is-none() {
+                    # when style is NONE
+                    # ignore hframe and vframe
+                    # pass only content array to callback
                     &!callback(
                         [],
                         [],
@@ -295,6 +301,14 @@ class Generator::Table {
                 for 0 ..^ +@!content[$index] -> $cindex {
                     my \hline  = $cache.hline($cindex, @!max-widths[$cindex]);
                     my \corner = $cache.corner();
+                    # add a cell to frame
+                    # current a cell mean
+                    # --+
+                    #  |
+                    # i.e
+                    # top line
+                    # top right corner
+                    # right line
                     self!__add_cell(
                         $cache.vline($index, $height).middle(),
                         $index == 0 ?? hline.top() !! hline.middle(),
@@ -302,8 +316,17 @@ class Generator::Table {
                             corner.top().middle() !! corner.middle().middle()
                     );
                 }
+                # when last line is longer than current line
                 my $last-minus-current = $index <= 0 ?? -1 !!
                     @!content[$index - 1].elems - @!content[$index].elems;
+
+                # end current line i.e. complete current frame array
+                # add top left corner
+                # add far left line
+                # add far right line
+                # and when last-minus-current > -1
+                # add rest cell
+                # replace corner
                 self!__end_line(
                     $height,
                     @!max-widths,
@@ -312,6 +335,10 @@ class Generator::Table {
                     $index,
                     $last-minus-current
                 );
+                # call callback with
+                # hframe
+                # vfreame
+                # content
                 &!callback(
                     @!iterator[0],
                     @!iterator[1],
@@ -322,11 +349,14 @@ class Generator::Table {
             }
         }
         unless @!style[* - 1].style.line.is-none() {
+            # insert last hframe
             self!__insert_last_line(
                 @!max-widths,
                 @!style[* - 1].cache,
                 +@!content[* - 1]
             );
+            # call callback with last hframe
+            # with no vframe, no content
             &!callback(
                 @!frame[$!index],
                 [],
