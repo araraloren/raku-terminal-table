@@ -45,6 +45,25 @@ my @data = [
 ];
 
 print-table(@data);
+
+The result table:
+
+    +---------+----------------------+
+    |Language |Example               |
+    +---------+----------------------+
+    |Chinese  |你吃饭了吗？          |
+    |         |你好！                |
+    |         |你从哪里来？          |
+    +---------+----------------------+
+    |English  |Nice to meet you!     |
+    |         |Where are you from?   |
+    +---------+----------------------+
+    |Janpanese|ありがとうございます。|
+    |         |いただきます！        |
+    +---------+----------------------+
+    |Korean   |안녕하세요！          |
+    +---------+----------------------+
+
 =end code
 
 =head1 DESCRIPTION
@@ -261,11 +280,11 @@ Set color style for all line of cell (at row I<$r>, column I<$c>) base on (zero,
 
 The result table:
 
-[ + -- + -- + ]
-[ | xx | xx | ]
-[ + -- + -- + ]
-[ | xx | xx | ]
-[ + -- + -- + ]
+    [ + -- + -- + ]
+    [ | xx | xx | ]
+    [ + -- + -- + ]
+    [ | xx | xx | ]
+    [ + -- + -- + ]
 
 C<hide> and C<unhide> apply on result table. You can hide one row or one column,
 even one element of result table (frame or content("xx" in the table)).
@@ -323,5 +342,99 @@ $foo.visit(:&h-frame, :&v-frame, True);
 Visit the table data, call C<&h-frame> when access horizonal-frame line, and C<&v-frame>
 for horizonal-frame line and content. In your callback, you can use some helper
 method in C<VisitorHelper>.
+
+=head2 class Style::Corner
+
+The C<Style::Corner> represent style of table corner, and you can defined your
+own style.
+
+=head3 method new(:@style, :$mode)
+
+=item :@style
+
+    The style is a two dimension array, such as:
+
+    ['+', '+', '+']
+    ['+', '+', '+']
+    ['+', '+', '+']
+
+=head3 default style
+
+Return the style count when C<$count> is set, or return a style instance according
+C<$index>.
+
+=item method none(Int $index, :$count)
+
+    This style has 1 default style.
+
+    ['',  '', '']
+    ['',  '', '']
+    ['',  '', '']
+
+    No corner style, attention this only used in concert with C<Style::Line::none>.
+
+=item method space(Int $index, :$count)
+
+    This style has 1 default style.
+
+    [' ', ' ', ' ']
+    [' ', ' ', ' ']
+    [' ', ' ', ' ']
+
+=item method ascii(Int $index, :$count)
+
+    This style has 1 default style.
+
+    <+ + +>,
+    <+ + +>,
+    <+ + +>,
+
+=item method single(Int $index, :$count)
+
+    This style has 4 default style.
+
+    <┌ ┬ ┐>,
+    <├ ┼ ┤>,
+    <└ ┴ ┘>,
+
+    <┏ ┳ ┓>,
+    <┣ ╋ ┫>,
+    <┗ ┻ ┛>,
+
+    <┍ ┰ ┑>,
+    <┝ ┿ ┥>,
+    <┕ ┸ ┙>,
+
+    <┎ ┯ ┒>,
+    <┠ ╂ ┨>,
+    <┖ ┷ ┚>,
+
+=item method double(Int $index, :$count)
+
+    This style has 3 default style.
+
+    <╔ ╦ ╗>,
+    <╠ ╬ ╣>,
+    <╚ ╩ ╝>,
+
+    <╒ ╤ ╕>,
+    <╞ ╪ ╡>,
+    <╘ ╧ ╛>,
+
+    <╓ ╥ ╖>,
+    <╟ ╫ ╢>,
+    <╙ ╨ ╜>,
+
+=item method round(Int $index, :$count)
+
+    This style has 2 default style.
+
+    <╭ ╦ ╮>,
+    <╠ ╬ ╣>,
+    <╰ ╩ ╯>,
+
+    <╭ ┬ ╮>,
+    <├ ┼ ┤>,
+    <╰ ┴ ╯>,
 
 =end pod
