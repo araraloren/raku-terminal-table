@@ -72,6 +72,8 @@ Terminal::Table can generate ascii table or unicode table output
 in terminals. It can be simple use high level interface C<&print-table>,
 or use class C<Generator> in complex way.
 
+=head1 SUB
+
 =head2 tabstop() returns Int is export is rw
 
 Setting tab width, default is 8.
@@ -130,10 +132,16 @@ C<&array-to-table> generate a table for the given data and style.
 
 C<&create-generator> create a C<Generator> for the given data and style.
 
-=head2 visitor-helper(--> Generator::VisitorHelper)
+=head2 noexpand-width(Str $str --> Int)
 
-Return a global instance of C<Generator::VisitorHelper>, it has some helper method
-for visit table data.
+Call C<Terminal::WCWidth::wcswidth> with C<$str>, and return the width.
+
+=head2 expand-width(Str $str --> Int)
+
+Expand C<$str> through C<Text::Tabs::expand>, and call C<Terminal::WCWidth::wcswidth>
+with expanded string, and return the width.
+
+=head1 CLASS
 
 =head2 class Generator
 
@@ -242,8 +250,8 @@ Generate table data, it'll call C<&callback> setted through C<set-callback>.
 
     Will call in generate process, it will pass first horizonal-frame line、second
     vertical-frame line, and content data, also coloured for style generate. The
-    C<@v-frame> and C<@@content> will empty when last line passed. You should call
-    help method in C<&visitor-helper> when use this callback. Please refer
+    C<@v-frame> and C<@content> will empty when last line passed. You should call
+    help method through C<&visitor-helper> when use this callback. Please refer
     L<sample/self-defined-style.p6> for sample.
 
 Set callback for C<Generator::Table::generate>.
@@ -321,6 +329,10 @@ Print the table.
 
 =head3 visit(Bool $coloured = True, :&h-frame, :&v-frame)
 
+=item :&h-frame ~~ & (@h-frame, Bool $coloured)
+
+=item :&v-frame ~~ & (@v-frame, @contents, Bool $coloured)
+
 =begin code
 
 # ...
@@ -341,7 +353,65 @@ $foo.visit(:&h-frame, :&v-frame, True);
 
 Visit the table data, call C<&h-frame> when access horizonal-frame line, and C<&v-frame>
 for horizonal-frame line and content. In your callback, you can use some helper
-method in C<VisitorHelper>.
+method  through C<&visitor-helper>.
+
+=head2 class VisitorHelper
+
+=head3 visitor-helper( --> VisitorHelper) is export is rw
+
+Return a instance of C<VisitorHelper>. It has some helper method for process table
+data.
+
+=head3 h-frame(@h-frame, Bool $coloured --> Array)
+
+Return string of the horizonal-frame as an array. The coloured is ignore.
+
+=head3 v-frame(@v-frame, @contents, Bool $coloured --> Array)
+
+Return string of the vertical-frame as an array. When coloured is set, string will
+format according style. When style is none, only string of C<@contents> will be
+return.
+
+=head3 generate(@h-frame, @v-frame, @contents, Bool $coloured --> Array)
+
+Return string of horizonal-frame or vertical-frame as an array like C<h-frame> or
+C<v-frame> does.
+
+=head2 enum Style::Default
+
+The style use unicode character except none, ascii and space, other style.
+
+=item NONE
+
+The none style.
+
+=item ASCII
+
+The ascii style, is common used style.
+
+=item SPACE
+
+The space style.
+
+=item DOT
+
+The dot style, only line has dot style.
+
+=item SINGLE
+
+The single style.
+
+=item DOUBLE
+
+The double style.
+
+=item ROUND
+
+The round style, only corner has round style.
+
+=item OTHER
+
+User define style.
 
 =head2 class Style::Corner
 
@@ -361,11 +431,13 @@ own style.
 =head3 default style
 
 Return the style count when C<$count> is set, or return a style instance according
-C<$index>.
+C<$index>. By default, the index is 0.
 
 =item method none(Int $index, :$count)
 
     This style has 1 default style.
+
+    Style 0
 
     ['',  '', '']
     ['',  '', '']
@@ -377,6 +449,8 @@ C<$index>.
 
     This style has 1 default style.
 
+    Style 0
+
     [' ', ' ', ' ']
     [' ', ' ', ' ']
     [' ', ' ', ' ']
@@ -384,6 +458,8 @@ C<$index>.
 =item method ascii(Int $index, :$count)
 
     This style has 1 default style.
+
+    Style 0
 
     <+ + +>,
     <+ + +>,
@@ -393,17 +469,25 @@ C<$index>.
 
     This style has 4 default style.
 
+    Style 0
+
     <┌ ┬ ┐>,
     <├ ┼ ┤>,
     <└ ┴ ┘>,
+
+    Style 1
 
     <┏ ┳ ┓>,
     <┣ ╋ ┫>,
     <┗ ┻ ┛>,
 
+    Style 2
+
     <┍ ┰ ┑>,
     <┝ ┿ ┥>,
     <┕ ┸ ┙>,
+
+    Style 3
 
     <┎ ┯ ┒>,
     <┠ ╂ ┨>,
@@ -413,13 +497,19 @@ C<$index>.
 
     This style has 3 default style.
 
+    Style 0
+
     <╔ ╦ ╗>,
     <╠ ╬ ╣>,
     <╚ ╩ ╝>,
 
+    Style 1
+
     <╒ ╤ ╕>,
     <╞ ╪ ╡>,
     <╘ ╧ ╛>,
+
+    Style 2
 
     <╓ ╥ ╖>,
     <╟ ╫ ╢>,
@@ -429,12 +519,416 @@ C<$index>.
 
     This style has 2 default style.
 
+    Style 0
+
     <╭ ╦ ╮>,
     <╠ ╬ ╣>,
     <╰ ╩ ╯>,
 
+    Style 1
+
     <╭ ┬ ╮>,
     <├ ┼ ┤>,
     <╰ ┴ ╯>,
+
+=head2 class Style::Line
+
+The C<Style::Line> represent style of table line, also you can define you own style.
+
+=head3 method new(:$mode, *%args)
+
+=item *%args
+
+    The C<*%args> is a hash which contains line style. Every style must have their
+    string and width. You can use C<&expand-width> get width. such as:
+
+    Style::Line.new(
+        top 		=> ['', 0],
+        h-middle 	=> ['', 0],
+        bottom 		=> ['', 0],
+        left 		=> ['', 0],
+        v-middle 	=> ['', 0],
+        right 		=> ['', 0],
+        mode 		=> NONE
+    )
+
+Return a instance of C<Style::Line>.
+
+=head3 default style
+
+Return the style count when C<$count> is set, or return a style instance according
+C<$index>. By default, the index is 0.
+
+=item method none(Int $index, :$count)
+
+    This style has 1 default style.
+
+    Style 0
+
+    top 	=> ['', 0],
+    h-middle 	=> ['', 0],
+    bottom 	=> ['', 0],
+    left 	=> ['', 0],
+    v-middle 	=> ['', 0],
+    right 	=> ['', 0],
+    mode 	=> NONE
+
+    No line style, attention this only used in concert with C<Style::Corner::none>.
+
+=item method ascii(Int $index, :$count)
+
+    This is style has 1 default style.
+
+    Style 0
+
+    top 	=> ['-', 1],
+    h-middle 	=> ['-', 1],
+    bottom 	=> ['-', 1],
+    left 	=> ['|', 1],
+    v-middle 	=> ['|', 1],
+    right 	=> ['|', 1],
+    mode 	=> ASCII
+
+    *----*----*
+    |    |    |
+    *----*----*
+    |    |    |
+    *----*----*
+
+=item method space(Int $index, :$count)
+
+    This is style has 1 default style.
+
+    Style 0
+
+    top 	=> [' ', 1],
+    h-middle 	=> [' ', 1],
+    bottom 	=> [' ', 1],
+    left 	=> [' ', 1],
+    v-middle 	=> [' ', 1],
+    right 	=> [' ', 1],
+    mode 	=> SPACE
+
+    *    *    *
+
+    *    *    *
+
+    *    *    *
+
+=item method single(Int $index, :$count)
+
+    This is style has 4 default style.
+
+    Style 0
+
+    top 	=> ['─', 1],
+    h-middle 	=> ['─', 1],
+    bottom 	=> ['─', 1],
+    left 	=> ['│', 1],
+    v-middle 	=> ['│', 1],
+    right 	=> ['│', 1],
+    mode 	=> SINGLE
+
+    *────*────*
+    │    │    │
+    *────*────*
+    │    │    │
+    *────*────*
+
+    Style 1
+
+    top 	=> ['━', 1],
+    h-middle 	=> ['━', 1],
+    bottom 	=> ['━', 1],
+    left 	=> ['┃', 1],
+    v-middle 	=> ['┃', 1],
+    right 	=> ['┃', 1],
+    mode 	=> SINGLE
+
+    *━━━━*━━━━*
+    ┃    ┃    ┃
+    *━━━━*━━━━*
+    ┃    ┃    ┃
+    *━━━━*━━━━*
+
+    Style 2
+
+    top 	=> ['╼', 1],
+    h-middle 	=> ['╼', 1],
+    bottom 	=> ['╼', 1],
+    left 	=> ['╽', 1],
+    v-middle 	=> ['╽', 1],
+    right 	=> ['╽', 1],
+    mode 	=> SINGLE
+
+    *╼╼╼╼*╼╼╼╼*
+    ╽    ╽    ╽
+    *╼╼╼╼*╼╼╼╼*
+    ╽    ╽    ╽
+    *╼╼╼╼*╼╼╼╼*
+
+    Style 3
+
+    top 	=> ['╾', 1],
+    h-middle 	=> ['╾', 1],
+    bottom 	=> ['╾', 1],
+    left 	=> ['╿', 1],
+    v-middle 	=> ['╿', 1],
+    right 	=> ['╿', 1],
+    mode 	=> SINGLE
+
+    *╾╾╾╾*╾╾╾╾*
+    ╿    ╿    ╿
+    *╾╾╾╾*╾╾╾╾*
+    ╿    ╿    ╿
+    *╾╾╾╾*╾╾╾╾*
+
+=item method double(Int $index, :$count)
+
+    This is style has 1 default style.
+
+    Style 0
+
+    top 	=> ['═', 1],
+    h-middle 	=> ['═', 1],
+    bottom 	=> ['═', 1],
+    left 	=> ['║', 1],
+    v-middle 	=> ['║', 1],
+    right 	=> ['║', 1],
+    mode 	=> DOUBLE
+
+    *════*════*
+    ║    ║    ║
+    *════*════*
+    ║    ║    ║
+    *════*════*
+
+=item method dot(Int $index, :$count)
+
+    This is style has 6 default style.
+
+    Style 0
+
+    top 	=> ['╌', 1],
+    h-middle 	=> ['╌', 1],
+    bottom 	=> ['╌', 1],
+    left 	=> ['╎', 1],
+    v-middle 	=> ['╎', 1],
+    right 	=> ['╎', 1],
+    mode 	=> DOT
+
+    *╌╌╌╌*╌╌╌╌*
+    ╎    ╎    ╎
+    *╌╌╌╌*╌╌╌╌*
+    ╎    ╎    ╎
+    *╌╌╌╌*╌╌╌╌*
+
+    Style 1
+
+    top 	=> ['╍', 1],
+    h-middle 	=> ['╍', 1],
+    bottom 	=> ['╍', 1],
+    left 	=> ['╏', 1],
+    v-middle 	=> ['╏', 1],
+    right 	=> ['╏', 1],
+    mode 	=> DOT
+
+    *╍╍╍╍*╍╍╍╍*
+    ╏    ╏    ╏
+    *╍╍╍╍*╍╍╍╍*
+    ╏    ╏    ╏
+    *╍╍╍╍*╍╍╍╍*
+
+    Style 2
+
+    top 	=> ['┅', 1],
+    h-middle 	=> ['┅', 1],
+    bottom 	=> ['┅', 1],
+    left 	=> ['┇', 1],
+    v-middle 	=> ['┇', 1],
+    right 	=> ['┇', 1],
+    mode 	=> DOT
+
+    *┅┅┅┅*┅┅┅┅*
+    ┇    ┇    ┇
+    *┅┅┅┅*┅┅┅┅*
+    ┇    ┇    ┇
+    *┅┅┅┅*┅┅┅┅*
+
+    Style 3
+
+    top 	=> ['┄', 1],
+    h-middle 	=> ['┄', 1],
+    bottom 	=> ['┄', 1],
+    left 	=> ['┆', 1],
+    v-middle 	=> ['┆', 1],
+    right 	=> ['┆', 1],
+    mode 	=> DOT
+
+    *┄┄┄┄*┄┄┄┄*
+    ┆    ┆    ┆
+    *┄┄┄┄*┄┄┄┄*
+    ┆    ┆    ┆
+    *┄┄┄┄*┄┄┄┄*
+
+    Style 4
+
+    top 	=> ['┈', 1],
+    h-middle 	=> ['┈', 1],
+    bottom 	=> ['┈', 1],
+    left 	=> ['┊', 1],
+    v-middle 	=> ['┊', 1],
+    right 	=> ['┊', 1],
+    mode 	=> DOT
+
+    *┈┈┈┈*┈┈┈┈*
+    ┊    ┊    ┊
+    *┈┈┈┈*┈┈┈┈*
+    ┊    ┊    ┊
+    *┈┈┈┈*┈┈┈┈*
+
+    Style 5
+
+    top 	=> ['┉', 1],
+    h-middle 	=> ['┉', 1],
+    bottom 	=> ['┉', 1],
+    left 	=> ['┋', 1],
+    v-middle 	=> ['┋', 1],
+    right 	=> ['┋', 1],
+    mode 	=> DOT
+
+    *┉┉┉┉*┉┉┉┉*
+    ┋    ┋    ┋
+    *┉┉┉┉*┉┉┉┉*
+    ┋    ┋    ┋
+    *┉┉┉┉*┉┉┉┉*
+
+=head2 enum Align
+
+This defined how a string of a cell aligned. This algin and padding of C<Style::Content>
+are independent. The padding width of algin is the difference between the width of
+string and C<max-width> set by user, and subtract the padding-width of C<Style::Content>.
+The padding of C<Style::Content> will append after align.
+
+=item LEFT
+
+Align left, the padding of content will append to right.
+
+=item RIGHT
+
+Align right, the padding of content will append to left.
+
+=item MIDDLE
+
+Align middle, the padding of content will append to both sides.
+
+=head2 class Style::Content
+
+=head3 method new(*%args)
+
+=item String :$padding-char = String.new(value => " ", width => 1)
+
+The character used for padding and align. Default is space.
+
+=item Int :$padding-left = 0
+
+The left padding count after algin, default is 0.
+
+=item Int :$padding-right = 0
+
+The right padding count after algin, default is 0.
+
+=item :$algin = Align::LEFT
+
+The algin style of content, default is Align::LEFT.
+
+=item :$split-word = False
+
+Will split word use connector '-' when set to True. It's only use in space-delimited
+language such as english.
+
+=head3 default style
+
+=item method space()
+
+This use default style, the padding-char is space.
+
+=head2 class Style
+
+This represent the style of whole table.
+
+=head3 method new(*%args)
+
+=item Style::Corner :$corner-style
+
+The style of table corner.
+
+=item Style::Line :$line-style
+
+The style of table line.
+
+=item Style::Content :$content-style
+
+The style of table content.
+
+=head3 default(:$style = Style::Default::ASCII)
+
+Return a default style according C<$style>.
+
+=item Style::Default::ASCII
+
+    corner-style => Style::Corner.ascii(),
+    line-style => Style::Line.ascii(),
+    content-style => Style::Content.space(),
+
+=item Style::Default::SINGLE
+
+    corner-style => Style::Corner.single(),
+    line-style => Style::Line.single(),
+    content-style => Style::Content.space(),
+
+=item Style::Default::NONE
+
+    corner-style => Style::Corner.none(),
+    line-style => Style::Line.none(),
+    content-style => Style::Content.space(),
+
+=item Style::Default::SPACE
+
+    corner-style => Style::Corner.space(),
+    line-style => Style::Line.space(),
+    content-style => Style::Content.space(),
+
+=item  Style::Default::DOUBLE
+
+    corner-style => Style::Corner.double(),
+    line-style => Style::Line.double(),
+    content-style => Style::Content.space(),
+
+=item Style::Default::DOT
+
+    corner-style => Style::Corner.single(),
+    line-style => Style::Line.dot(),
+    content-style => Style::Content.space(),
+
+=item Style::Default::ROUND
+
+    corner-style => Style::Corner.round(),
+    line-style => Style::Line.single(),
+    content-style => Style::Content.space(),
+
+=head2 class Color::String
+
+This represent string color style. It used style from C<Terminal::ANSIColor>.
+
+=head3 method new(*%args)
+
+=item :@color
+
+The style array of string. Such as <red underline>.
+
+=item :$enabled = True
+
+Default is enabled.
 
 =end pod
