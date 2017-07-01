@@ -257,6 +257,21 @@ Set color style for C<$row> line of cell (at row I<$r>, column I<$c>) base on (z
 
 Set color style for all line of cell (at row I<$r>, column I<$c>) base on (zero, zero).
 
+=head3 cell(Int $r, Int $c --> CellRef)
+
+=item cell
+
+    # top-left    top   top-right   
+    #         + ------- +
+    #    left | content | right
+    #         + ------- +
+    #bottom-left bottom bottom-right
+
+    A cell contain four line, four corner, and one content.
+
+Return the cell line C<$r> and column C<$c> in the table. The method name of C<CellRef> is
+list above. 
+
 =head3 hide and unhide
 
 The result table:
@@ -267,7 +282,7 @@ The result table:
     [ | xx | xx | ]
     [ + -- + -- + ]
 
-C<hide> and C<unhide> apply on result table. You can hide one row or one column,
+C<hide> and C<unhide> apply on I<result table>. You can hide one row or one column,
 even one element of result table (frame or content("xx" in the table)).
 
 The C<$r> and C<$c> is row index and column index of result table element;
