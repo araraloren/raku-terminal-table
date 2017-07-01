@@ -1,7 +1,7 @@
 {
     "perl"        : "6.c",
     "name"        : "Terminal::Table",
-    "version"     : "0.0.5",
+    "version"     : "0.0.6",
     "license"     : "MIT",
     "description" : "Advanced table generate module for perl6",
     "depends"     : [
