@@ -49,11 +49,11 @@ class String is Str does ToWhiteSpace {
     }
 
     method clone(*%_) {
-        self.bless(
+        nextwith(
             width => %_<width> // $!width,
-            style => %_<style> // $!style.clone()
+            style => %_<style> // $!style.clone(),
+            |%_
         );
-        nextwith(|%_);
     }
 
     multi method Str() {

@@ -28,7 +28,10 @@ role Visible {
     }
 
     method clone(*%_) {
-        self.bless(visibility => %_<visibility> // $!visibility);
+        nextwith(
+            visibility => %_<visibility> // $!visibility,
+            |%_
+        );
     }
 }
 
@@ -79,11 +82,11 @@ class Line {
     }
 
     method clone(*%_) {
-        self.bless(
+        nextwith(
             base => %_<base> // $!base.clone(),
             n    => %_<n> // $!n,
+            |%_
         );
-        nextwith(|%_);
     }
 
     method perl() {
@@ -114,10 +117,10 @@ class Corner {
     }
 
     method clone(*%_) {
-        self.bless(
+        nextwith(
             base => %_<base>:exists ?? %_<base> !! $!base.clone(),
+            |%_
         );
-        nextwith(|%_);
     }
 
     method perl() {
@@ -304,11 +307,11 @@ class Content {
     }
 
     method clone(*%_) {
-        self.bless(
+        nextwith(
             lines => %_<lines> // @!lines.clone(),
-            padding => %_<padding> // @!padding.clone()
+            padding => %_<padding> // @!padding.clone(),
+            |%_
         );
-        nextwith(|%_);
     }
 
     method height() {
