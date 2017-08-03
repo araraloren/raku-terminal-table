@@ -26,16 +26,32 @@ It uses pre-defined style.
 Default is `Style::Default::ASCII`, also you can their low case name such as 'ascii'.
 
 * print-table(@data, @max-widths = [], :$style=Style::Default::ASCII)
-
++
 Print table to stdout.
 
 * array-to-table(@data, @max-widths = [], :$style=Style::Default::ASCII)
-
++
 Return an array contain table data;
 
 * create-generator(@data, :$style=Style::Default::ASCII);
-
++
 Return an generator base on the `@data`.
+
+==== Pre-defined Style
+
+[source,perl6]
+---------------
+enum Style::Default  is export <<
+	:NONE('none')
+	:ASCII('ascii')
+	:SPACE('space')
+	:DOT('dot')
+	:SINGLE('single')
+	:DOUBLE('double')
+	:ROUND('round')
+	:OTHER('other') # other is use for self-defined-style
+>>;
+---------------
 
 ## Example
 
