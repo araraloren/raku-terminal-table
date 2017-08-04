@@ -5,6 +5,8 @@ Advanced table generate module for perl6
 
 image:https://travis-ci.org/araraloren/perl6-terminal-table.svg?branch=master["Build Status", link="https://travis-ci.org/araraloren/perl6-terminal-table"]
 
+image:https://ci.appveyor.com/api/projects/status/sbgq8vt0775fu1pk/branch/master?svg=true["Windows Build Status", link="https://ci.appveyor.com/api/projects/status/sbgq8vt0775fu1pk?svg=true"]
+
 # Description
 
 Terminal::Table provides a simple and also a advance way generate table output in
