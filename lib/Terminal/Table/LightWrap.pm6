@@ -110,14 +110,14 @@ sub split-w($str, Int $length, :$force = False) {
 
 multi sub wrap(String $str, Int :$max-width, Int :$tabstop, Bool :$force = False) is export {
 	my @ret = [];
-	@ret.append(split-w($_, $max-width, :$force)) for @(expand(split(/\n/, $str), $tabstop));
+	@ret.append(split-w($_, $max-width, :$force)) for @(expand(split(/\n/, $str), ts => $tabstop));
 	return @ret>>.unexpand;
 }
 
 multi sub wrap(@strs, Int :$max-width, Int :$tabstop, Bool :$force = False) is export {
 	my @ret = [];
 	for @strs -> $str {
-		@ret.append(split-w($_, $max-width, :$force)) for @(expand(split(/\n/, $str), $tabstop));
+		@ret.append(split-w($_, $max-width, :$force)) for @(expand(split(/\n/, $str), ts => $tabstop));
 	}
 	return @ret>>.unexpand;
 }

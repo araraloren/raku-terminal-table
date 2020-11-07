@@ -10,7 +10,7 @@ sub noexpand-width(Str $str) returns Int is export {
 }
 
 sub expand-width(Str $str, Int $tabstop) returns Int is export {
-    return wcswidth(expand([$str], $tabstop)[0]);
+    return wcswidth(expand([$str], ts => $tabstop)[0]);
 }
 
 role ToWhiteSpace {
