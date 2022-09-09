@@ -7,27 +7,27 @@
     "Terminal::WCWidth",
     "Text::Tabs"
   ],
-  "description" : "Advanced table generate module for perl6",
+  "description" : "Advanced table generate module for raku lang",
   "license" : "MIT",
   "name" : "Terminal::Table",
   "perl" : "6.c",
   "provides" : {
-    "Terminal::Table" : "lib/Terminal/Table.pm6",
-    "Terminal::Table::Exception" : "lib/Terminal/Table/Exception.pm6",
-    "Terminal::Table::Frame" : "lib/Terminal/Table/Frame.pm6",
-    "Terminal::Table::Generator" : "lib/Terminal/Table/Generator.pm6",
-    "Terminal::Table::LightWrap" : "lib/Terminal/Table/LightWrap.pm6",
-    "Terminal::Table::Settings" : "lib/Terminal/Table/Settings.pm6",
-    "Terminal::Table::Shader" : "lib/Terminal/Table/Shader.pm6",
-    "Terminal::Table::String" : "lib/Terminal/Table/String.pm6",
-    "Terminal::Table::Style" : "lib/Terminal/Table/Style.pm6",
-    "Terminal::Table::VisitorHelper" : "lib/Terminal/Table/VisitorHelper.pm6"
+    "Terminal::Table" : "lib/Terminal/Table.rakumod",
+    "Terminal::Table::Exception" : "lib/Terminal/Table/Exception.rakumod",
+    "Terminal::Table::Frame" : "lib/Terminal/Table/Frame.rakumod",
+    "Terminal::Table::Generator" : "lib/Terminal/Table/Generator.rakumod",
+    "Terminal::Table::LightWrap" : "lib/Terminal/Table/LightWrap.rakumod",
+    "Terminal::Table::Settings" : "lib/Terminal/Table/Settings.rakumod",
+    "Terminal::Table::Shader" : "lib/Terminal/Table/Shader.rakumod",
+    "Terminal::Table::String" : "lib/Terminal/Table/String.rakumod",
+    "Terminal::Table::Style" : "lib/Terminal/Table/Style.rakumod",
+    "Terminal::Table::VisitorHelper" : "lib/Terminal/Table/VisitorHelper.rakumod"
   },
   "resources" : [ ],
-  "source-url" : "https://github.com/araraloren/perl6-terminal-table.git",
+  "source-url" : "https://github.com/araraloren/raku-terminal-table.git",
   "support" : {
-    "bugtracker" : "https://github.com.araraloren/perl6-terminal-table/issues",
-    "source" : "https://github.com/araraloren/perl6-terminal-table.git"
+    "bugtracker" : "https://github.com.araraloren/raku-terminal-table/issues",
+    "source" : "https://github.com/araraloren/raku-terminal-table.git"
   },
   "tags" : [
     "terminal",
@@ -35,5 +35,5 @@
     "text"
   ],
   "test-depends" : [ ],
-  "version" : "0.0.9"
+  "version" : "0.1.0"
 }

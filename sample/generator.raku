@@ -1,4 +1,4 @@
-#!/usr/bin/env perl6
+#!/usr/bin/env raku
 
 use Terminal::Table::Style;
 use Terminal::Table::Generator;

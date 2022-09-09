@@ -89,8 +89,8 @@ class Line {
         );
     }
 
-    method perl() {
-        return self.defined ?? "Line.new(base => \"{$!base.perl}\", n => $!n)" !! "(Line)";
+    method raku() {
+        return self.defined ?? "Line.new(base => \"{$!base.raku}\", n => $!n)" !! "(Line)";
     }
 }
 
@@ -123,8 +123,8 @@ class Corner {
         );
     }
 
-    method perl() {
-        return self.defined ?? "Corner.new(base => \"{$!base.perl}\")" !! "(Corner)";
+    method raku() {
+        return self.defined ?? "Corner.new(base => \"{$!base.raku}\")" !! "(Corner)";
     }
 }
 

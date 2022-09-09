@@ -1,9 +1,9 @@
 # Terminal-Table
 :toc-title: contents
 
-Advanced table generate module for perl6
+Advanced table generate module for raku lang
 
-image:https://travis-ci.org/araraloren/perl6-terminal-table.svg?branch=master["Build Status", link="https://travis-ci.org/araraloren/perl6-terminal-table"]
+image:https://travis-ci.org/araraloren/raku-terminal-table.svg?branch=master["Build Status", link="https://travis-ci.org/araraloren/raku-terminal-table"]
 
 image:https://ci.appveyor.com/api/projects/status/sbgq8vt0775fu1pk/branch/master?svg=true["Windows Build Status", link="https://ci.appveyor.com/api/projects/status/sbgq8vt0775fu1pk?svg=true"]
 
@@ -41,7 +41,7 @@ Return an generator base on the `@data`.
 
 ==== Pre-defined Style
 
-[source,perl6]
+[source,raku]
 ---------------
 enum Style::Default  is export <<
 	:NONE('none')
@@ -59,7 +59,7 @@ enum Style::Default  is export <<
 
 ### High Level Interface
 
-[source, perl6]
+[source, raku]
 --------------------------
 use Terminal::Table;
 
@@ -80,9 +80,9 @@ image:resources/output1.png[output for high-level-api]
 
 ### Low Level Interface
 
-[source, perl6]
+[source, raku]
 --------------------------
-#!/usr/bin/env perl6
+#!/usr/bin/env raku
 
 use v6;
 use Terminal::Table::Generator;
@@ -133,9 +133,9 @@ image:resources/output2.png[output for low-level-api]
 
 Terminal::Table use https://github.com/tadzik/Terminal-ANSIColor[Terminal::ANSIColor] for colour process.
 
-[source, perl6]
+[source, raku]
 --------------------------
-#!/usr/bin/env perl6
+#!/usr/bin/env raku
 
 use Terminal::Table::Style;
 use Terminal::Table::Generator;
@@ -186,9 +186,9 @@ image:resources/output3.png[output for join-and-colour]
 
 ### Irregular shape
 
-[source, perl6]
+[source, raku]
 -------------------------
-#!/usr/bin/env perl6
+#!/usr/bin/env raku
 
 use v6;
 use Terminal::Table;
@@ -279,9 +279,9 @@ For more usage, check out sample or POD document.
 ## From source
 [source, shell]
 --------------------------
-git clone https://github.com/araraloren/perl6-terminal-table
+git clone https://github.com/araraloren/raku-terminal-table
 
-cd perl6-terminal-table && git checkout v0.0.1 && zef install .
+cd raku-terminal-table && git checkout v0.0.1 && zef install .
 --------------------------
 
 ## From zef

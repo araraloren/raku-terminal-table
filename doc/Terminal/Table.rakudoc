@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-Terminal::Table - Advanced table generate module for perl6
+Terminal::Table - Advanced table generate module for raku
 
 =head1 SYNOPSIS
 

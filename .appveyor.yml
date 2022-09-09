@@ -18,8 +18,8 @@ build: off
 test_script:
   # Install dependency Distribution::Common
   - git clone https://github.com/ugexe/zef %APPVEYOR_BUILD_FOLDER%\..\zef
-  - perl6 -I %APPVEYOR_BUILD_FOLDER%\..\zef\lib %APPVEYOR_BUILD_FOLDER%\..\zef\bin\zef --depsonly install .
+  - raku -I %APPVEYOR_BUILD_FOLDER%\..\zef\lib %APPVEYOR_BUILD_FOLDER%\..\zef\bin\zef --depsonly install .
   # test
-  - prove -v -e "perl6 -Ilib" t/
+  - prove -v -e "raku -Ilib" t/
 
 shallow_clone: true

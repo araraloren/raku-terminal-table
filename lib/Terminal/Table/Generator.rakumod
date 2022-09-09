@@ -217,8 +217,8 @@ class Generator {
         return $gt;
     }
 
-    method perl() {
-        self.defined ?? "Generator.new(style => {@!style[0].style.pelr})" !! "(Generator)";
+    method raku() {
+        self.defined ?? "Generator.new(style => {@!style[0].style.raku})" !! "(Generator)";
     }
 }
 

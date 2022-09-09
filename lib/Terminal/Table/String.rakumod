@@ -98,8 +98,8 @@ class String is Str does ToWhiteSpace {
         return True;
     }
 
-    method perl() {
+    method raku() {
         return self.defined ?? "String.new(value => \"{self.Str()}\"," ~
-            " width => {$!width}, style => {$!style.perl})" !! "(String)";
+            " width => {$!width}, style => {$!style.raku})" !! "(String)";
     }
 }

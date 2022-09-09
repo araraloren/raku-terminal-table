@@ -23,7 +23,7 @@ class VisitorHelper {
                 return &cb(|c);
             }
 		}
-        fail "Not wrapper named: $name with signature {c.perl}!";
+        fail "Not wrapper named: $name with signature {c.raku}!";
 	}
 }
 

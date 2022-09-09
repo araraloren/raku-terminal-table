@@ -1,6 +1,6 @@
-language: perl6
+language: raku
 
-perl6:
+raku:
     - latest
 
 install:

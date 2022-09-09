@@ -1,4 +1,4 @@
-#!/usr/bin/env perl6
+#!/usr/bin/env raku
 
 use HTTP::Client;
 use Terminal::Table::Style;
@@ -6,7 +6,7 @@ use Terminal::Table::Settings;
 use Terminal::Table::Generator;
 use Terminal::Table::VisitorHelper;
 
-constant MODULE-LIST = 'http://modules.perl6.org';
+constant MODULE-LIST = 'http://modules.raku.org';
 
 my $client  = HTTP::Client.new;
 my $respone = $client.get(MODULE-LIST);

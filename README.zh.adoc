@@ -1,9 +1,9 @@
 # Terminal-Table
 :toc-title: contents
 
-Advanced table generate module for perl6
+Advanced table generate module for raku lang
 
-image:https://travis-ci.org/araraloren/perl6-terminal-table.svg?branch=master["Build Status", link="https://travis-ci.org/araraloren/perl6-terminal-table"]
+image:https://travis-ci.org/araraloren/raku-terminal-table.svg?branch=master["Build Status", link="https://travis-ci.org/araraloren/raku-terminal-table"]
 
 # 描述
 
@@ -17,7 +17,7 @@ image:https://travis-ci.org/araraloren/perl6-terminal-table.svg?branch=master["B
 
 ### High Level Interface
 
-[source, perl6]
+[source, raku]
 --------------------------
 use Terminal::Table;
 
@@ -38,9 +38,9 @@ image:resources/output1.png[output for high-level-api]
 
 ### Low Level Interface
 
-[source, perl6]
+[source, raku]
 --------------------------
-#!/usr/bin/env perl6
+#!/usr/bin/env raku
 
 use v6;
 use Terminal::Table::Generator;
@@ -91,9 +91,9 @@ image:resources/output2.png[output for low-level-api]
 
 Terminal::Table 使用模块 https://github.com/tadzik/Terminal-ANSIColor[Terminal::ANSIColor] 来处理颜色。
 
-[source, perl6]
+[source, raku]
 --------------------------
-#!/usr/bin/env perl6
+#!/usr/bin/env raku
 
 use Terminal::Table::Style;
 use Terminal::Table::Generator;
@@ -144,9 +144,9 @@ image:resources/output3.png[output for join-and-colour]
 
 ### 不规则形状
 
-[source, perl6]
+[source, raku]
 -------------------------
-#!/usr/bin/env perl6
+#!/usr/bin/env raku
 
 use v6;
 use Terminal::Table;
@@ -237,9 +237,9 @@ image:resources/output4.png[output for irregular shape]
 ## 从源码安装
 [source, shell]
 --------------------------
-git clone https://github.com/araraloren/perl6-terminal-table
+git clone https://github.com/araraloren/raku-terminal-table
 
-cd perl6-terminal-table
+cd raku-terminal-table
 
 git checkout v0.3.5(你想安装的版本tag)
 
