@@ -15,12 +15,12 @@ sub create-generator(@data, :$style = Style::Default::ASCII) is export {
 sub print-table(@data, @max-widths = [], :$style = Style::Default::ASCII) is export {
     my $generator = create-generator(@data, :$style);
 
-    $generator.generate.print(:coloured);
+    $generator.generate(@max-widths).print(:coloured);
 }
 
 sub array-to-table(@data, @max-widths = [], :$style = Style::Default::ASCII) is export {
     my $generator = create-generator(@data, :$style);
 
-    $generator.generate.to-array(:coloured);
+    $generator.generate(@max-widths).to-array(:coloured);
 }
 
