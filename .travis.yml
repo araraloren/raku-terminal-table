@@ -1,8 +1,8 @@
-language: raku
+language: perl6
 
-raku:
+perl6:
     - latest
 
 install:
-    - rakudobrew build zef
+    - rakudobrew build-zef
     - zef install .
